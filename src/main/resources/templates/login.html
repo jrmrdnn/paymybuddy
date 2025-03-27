@@ -5,20 +5,21 @@
   ></head>
   <body>
     <header></header>
-    <main class="login-card">
-      <div id="form-title" class="login-title" role="heading" aria-level="1">
+    <main class="form-card">
+      <div id="login-title" class="form-title" role="heading" aria-level="1">
         Pay My Buddy
       </div>
       <form
-        class="login-form"
+        id="login-form"
+        class="form"
         th:action="@{/login}"
         method="post"
-        aria-labelledby="form-title"
+        aria-labelledby="login-title"
       >
         <div class="form-control">
           <label class="form-label-hidden" for="email">Email</label>
           <input
-            id="email"
+            id="login-email"
             name="email"
             type="email"
             class="form-input"
@@ -33,7 +34,7 @@
         <div class="form-control">
           <label class="form-label-hidden" for="password">Mot de passe</label>
           <input
-            id="password"
+            id="login-password"
             name="password"
             type="password"
             class="form-input"
@@ -45,7 +46,9 @@
             >Identifiants incorrects</span
           >
         </div>
-        <button class="login-btn" type="submit">Se connecter</button>
+        <button id="login-btn" class="form-btn" type="submit">
+          Se connecter
+        </button>
       </form>
     </main>
     <footer></footer>

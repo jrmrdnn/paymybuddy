@@ -23,6 +23,39 @@ body {
 /* ---------------------
          Form Auth
    --------------------- */
+.form-card {
+  width: 100%;
+  max-width: 500px;
+  height: 100%;
+  max-height: 688px;
+  flex: 1;
+  margin: 10px auto;
+  padding: 64px 10px;
+  border: #000 1px solid;
+  box-shadow: 0 5px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.form-title {
+  width: 214px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  background-color: #f69f1d;
+  border-radius: 8px;
+  user-select: none;
+}
+
+.form {
+  width: 100%;
+  max-width: 295px;
+  margin: 0 auto;
+}
+
 .form-label {
   font-size: 20px;
 }
@@ -58,59 +91,15 @@ body {
 .form-span {
   position: absolute;
   left: 8px;
-  bottom: -15px;
+  top: 62px;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.5px;
   color: red;
 }
 
-/* ---------------------
-        Login Page
-   --------------------- */
-.login-card {
+.form-btn {
   width: 100%;
-  max-width: 500px;
-  height: 100%;
-  max-height: 688px;
-  flex: 1;
-  margin: 10px auto;
-  padding: 64px 10px 106px;
-  border: #000 1px solid;
-  box-shadow: 0 5px 3px 0 rgba(0, 0, 0, 0.1);
-}
-
-.login-title {
-  width: 214px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 114px;
-  font-size: 24px;
-  font-weight: 700;
-  color: #fff;
-  background-color: #f69f1d;
-  border-radius: 8px;
-  user-select: none;
-}
-
-.login-form {
-  width: 100%;
-  max-width: 295px;
-  margin: 0 auto;
-}
-
-.login-form .form-control:first-of-type {
-  margin-bottom: 42px;
-}
-
-.login-form .form-control:last-of-type {
-  margin-bottom: 114px;
-}
-
-.login-btn {
-  width: 214px;
   height: 64px;
   display: flex;
   align-items: center;
@@ -124,4 +113,46 @@ body {
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s ease-in-out;
+}
+
+/* ---------------------
+        Login Page
+   --------------------- */
+#login-title {
+  margin-bottom: 114px;
+}
+
+#login-email {
+  margin-bottom: 42px;
+}
+
+#login-password {
+  margin-bottom: 114px;
+}
+
+#login-btn {
+  width: 214px;
+}
+
+/* ---------------------
+       Register Page
+   --------------------- */
+#register-title {
+  margin-bottom: 66px;
+}
+
+#register-username {
+  margin-bottom: 21px;
+}
+
+#register-email {
+  margin-bottom: 21px;
+}
+
+#register-password {
+  margin-bottom: 102px;
+}
+
+#register-btn {
+  width: 159px;
 }

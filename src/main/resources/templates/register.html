@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+  <head
+    th:replace="~{fragments/head :: head('Inscription | PayMyBuddy', 'Pour créer un compte PayMyBuddy, veuillez renseigner les informations suivantes.')}"
+  ></head>
+  <body>
+    <header></header>
+    <main class="form-card">
+      <div id="register-title" class="form-title" role="heading" aria-level="1">
+        Pay My Buddy
+      </div>
+      <form
+        id="register-form"
+        class="form"
+        method="post"
+        th:action="@{/register}"
+        th:object="${userRegisterDto}"
+        aria-labelledby="register-title"
+      >
+        <div class="form-control">
+          <label class="form-label-hidden" for="register-username"
+            >Username</label
+          >
+          <input
+            id="register-username"
+            name="username"
+            type="text"
+            class="form-input"
+            placeholder="Username"
+            th:field="*{username}"
+            aria-required="true"
+            required
+          />
+          <span
+            class="form-span"
+            th:if="${#fields.hasErrors('username')}"
+            th:errors="*{username}"
+          ></span>
+        </div>
+        <div class="form-control">
+          <label class="form-label-hidden" for="register-email">Mail</label>
+          <input
+            id="register-email"
+            name="email"
+            type="email"
+            class="form-input"
+            placeholder="Mail"
+            th:field="*{email}"
+            aria-required="true"
+            required
+          />
+          <span
+            class="form-span"
+            th:if="${#fields.hasErrors('email')}"
+            th:errors="*{email}"
+          ></span>
+        </div>
+        <div class="form-control">
+          <label class="form-label-hidden" for="register-password"
+            >Mot de passe</label
+          >
+          <input
+            id="register-password"
+            name="password"
+            type="password"
+            class="form-input"
+            placeholder="Mot de passe"
+            th:field="*{password}"
+            aria-required="true"
+            required
+          />
+          <span
+            class="form-span"
+            th:if="${#fields.hasErrors('password')}"
+            th:errors="*{password}"
+          ></span>
+        </div>
+        <button id="register-btn" class="form-btn" type="submit">
+          S’inscrire
+        </button>
+      </form>
+    </main>
+    <footer></footer>
+  </body>
+</html>
