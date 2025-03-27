@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+  <head
+    th:replace="~{fragments/head :: head('Relation | PayMyBuddy', 'Ajouter une relation')}"
+  ></head>
+  <body>
+    <header th:replace="fragments/header :: header('relation')"></header>
+    <main>
+      <form id="relation-form" class="form" method="post">
+        <div id="relation-control" class="form-control">
+          <label class="form-label" for="relation-input"
+            >Chercher une relation</label
+          >
+          <input
+            id="relation-input"
+            name="email"
+            type="email"
+            class="form-input"
+            placeholder="Saisir une adresse mail"
+            aria-required="true"
+            required
+          />
+        </div>
+        <button id="relation-btn" class="form-btn" type="submit">
+          Ajouter
+        </button>
+      </form>
+    </main>
+    <footer></footer>
+  </body>
+</html>

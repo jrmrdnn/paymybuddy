@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <header class="header" th:fragment="header(currentPage)">
+      <div class="header-logo">Pay My Buddy</div>
+      <nav class="header-nav">
+        <a
+          class="header-link"
+          th:href="@{/transfer}"
+          th:classappend="${currentPage == 'transfer' ? 'active' : ''}"
+          >Transférer</a
+        >
+        <a
+          class="header-link"
+          th:href="@{/profil}"
+          th:classappend="${currentPage == 'profil' ? 'active' : ''}"
+          >Profil</a
+        >
+        <a
+          class="header-link"
+          th:href="@{/relation}"
+          th:classappend="${currentPage == 'relation' ? 'active' : ''}"
+          >Ajouter relation</a
+        >
+        <a class="header-link" th:href="@{/logout}">Se déconnecter</a>
+      </nav>
+    </header>
+  </body>
+</html>
