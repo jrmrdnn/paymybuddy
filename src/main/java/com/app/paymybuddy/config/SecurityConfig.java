@@ -30,6 +30,7 @@ public class SecurityConfig {
   };
   private static final String LOGIN_PATH = "/login";
   private static final String LOGOUT_PATH = "/logout";
+  private static final String SUCCESS_PATH = "/transfer";
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http)
@@ -47,6 +48,7 @@ public class SecurityConfig {
           .loginPage(LOGIN_PATH)
           .usernameParameter("email")
           .passwordParameter("password")
+          .defaultSuccessUrl(SUCCESS_PATH, true)
           .permitAll()
       )
       .logout(logout ->
