@@ -22,13 +22,16 @@ public class RegisterService {
    */
   @Transactional
   public void saveUser(UserRegisterDto userDto) {
+    // 1. Check if the user already exists
     validateEmailUniqueness(userDto.getEmail());
 
+    // 2. Create the user
     User user = new User();
     user.setUsername(userDto.getUsername());
     user.setEmail(userDto.getEmail());
     user.setPassword(passwordEncoder.encode(userDto.getPassword()));
 
+    // 3. Set the role to USER
     userRepository.save(user);
   }
 

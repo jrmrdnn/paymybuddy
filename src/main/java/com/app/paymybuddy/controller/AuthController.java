@@ -41,6 +41,13 @@ public class AuthController {
     } catch (EmailAlreadyUsedException e) {
       result.rejectValue("email", "error.userRegisterDto", e.getMessage());
       return "register";
+    } catch (Exception e) {
+      result.rejectValue(
+        "email",
+        "error.userRegisterDto",
+        "Une erreur c'est produite"
+      );
+      return "register";
     }
 
     return "redirect:/login";

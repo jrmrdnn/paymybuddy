@@ -5,6 +5,12 @@
   ></head>
   <body class="body">
     <header th:replace="fragments/header :: header('transfer')"></header>
+    <div th:if="${successMessage}" class="success-message">
+      <p th:text="${successMessage}"></p>
+    </div>
+    <div th:if="${errorMessage}" class="error-message">
+      <p th:text="${errorMessage}"></p>
+    </div>
     <main>Page de transfert</main>
     <footer></footer>
   </body>

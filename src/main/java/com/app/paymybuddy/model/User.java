@@ -5,9 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -39,15 +37,18 @@ public class User {
   @Column(nullable = false)
   private String password;
 
-  @ManyToMany
-  @JoinTable(
-    name = "relations",
-    joinColumns = @JoinColumn(name = "user_id"),
-    inverseJoinColumns = @JoinColumn(name = "relation_user_id")
-  )
-  private List<User> relations;
+  @OneToMany(mappedBy = "user")
+  private List<Relation> myRelations;
 
-  @Column(name = "created_at", nullable = false, updatable = false)
+  @OneToMany(mappedBy = "relationUser")
+  private List<Relation> relatedToMe;
+
+  @Column(
+    name = "created_at",
+    nullable = false,
+    updatable = false,
+    columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP"
+  )
   @Temporal(TemporalType.TIMESTAMP)
   private LocalDateTime createdAt;
 

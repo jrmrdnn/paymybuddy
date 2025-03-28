@@ -1,0 +1,125 @@
+package com.app.paymybuddy.service;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+import com.app.paymybuddy.dto.request.RelationDto;
+import com.app.paymybuddy.exception.RelationAlreadyExistsException;
+import com.app.paymybuddy.exception.UserNotFoundException;
+import com.app.paymybuddy.model.User;
+import com.app.paymybuddy.repository.RelationRepository;
+import com.app.paymybuddy.repository.UserRepository;
+import com.app.paymybuddy.security.CustomUserDetails;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.core.Authentication;
+
+class RelationServiceTest {
+
+  private static final String CURRENT_EMAIL = "current@example.com";
+  private static final String RELATION_EMAIL = "relation@example.com";
+
+  @Mock
+  private RelationRepository relationRepository;
+
+  @Mock
+  private UserRepository userRepository;
+
+  @Mock
+  private Authentication authentication;
+
+  @InjectMocks
+  private RelationService relationService;
+
+  @BeforeEach
+  void setUp() {
+    MockitoAnnotations.openMocks(this);
+  }
+
+  @Test
+  void saveRelation_shouldThrowExceptionWhenCurrentUserAndRelationUserAreTheSame() {
+    RelationDto relationDto = new RelationDto();
+    relationDto.setEmail(RELATION_EMAIL);
+
+    CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
+    when(authentication.getPrincipal()).thenReturn(customUserDetails);
+    when(authentication.getName()).thenReturn(RELATION_EMAIL);
+
+    assertThrows(RelationAlreadyExistsException.class, () ->
+      relationService.saveRelation(authentication, relationDto)
+    );
+  }
+
+  @Test
+  void saveRelation_shouldThrowExceptionWhenRelationUserNotFound() {
+    RelationDto relationDto = new RelationDto();
+    relationDto.setEmail(RELATION_EMAIL);
+
+    CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
+    when(authentication.getPrincipal()).thenReturn(customUserDetails);
+    when(authentication.getName()).thenReturn(CURRENT_EMAIL);
+
+    when(
+      userRepository.findByEmailAndDeletedAtIsNull(RELATION_EMAIL)
+    ).thenReturn(Optional.empty());
+
+    assertThrows(UserNotFoundException.class, () ->
+      relationService.saveRelation(authentication, relationDto)
+    );
+  }
+
+  @Test
+  void saveRelation_shouldThrowExceptionWhenRelationAlreadyExists() {
+    RelationDto relationDto = new RelationDto();
+    relationDto.setEmail(RELATION_EMAIL);
+
+    CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
+    when(authentication.getPrincipal()).thenReturn(customUserDetails);
+    when(authentication.getName()).thenReturn(CURRENT_EMAIL);
+
+    when(customUserDetails.getUserId()).thenReturn(1);
+
+    User relationUser = new User();
+    relationUser.setId(2);
+
+    when(
+      userRepository.findByEmailAndDeletedAtIsNull(RELATION_EMAIL)
+    ).thenReturn(Optional.of(relationUser));
+    when(
+      relationRepository.existsRelationBetweenUserIdAndEmail(1, 2)
+    ).thenReturn(true);
+
+    assertThrows(RelationAlreadyExistsException.class, () ->
+      relationService.saveRelation(authentication, relationDto)
+    );
+  }
+
+  @Test
+  void saveRelation_shouldSaveRelationSuccessfully() {
+    RelationDto relationDto = new RelationDto();
+    relationDto.setEmail(RELATION_EMAIL);
+
+    CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
+    when(authentication.getPrincipal()).thenReturn(customUserDetails);
+    when(customUserDetails.getUserId()).thenReturn(1);
+    when(authentication.getName()).thenReturn(CURRENT_EMAIL);
+
+    User relationUser = new User();
+    relationUser.setId(2);
+
+    when(
+      userRepository.findByEmailAndDeletedAtIsNull(RELATION_EMAIL)
+    ).thenReturn(Optional.of(relationUser));
+    when(
+      relationRepository.existsRelationBetweenUserIdAndEmail(1, 2)
+    ).thenReturn(false);
+
+    relationService.saveRelation(authentication, relationDto);
+
+    verify(relationRepository, times(1)).saveRelation(1, 2);
+  }
+}

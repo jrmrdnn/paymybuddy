@@ -1,9 +1,9 @@
 package com.app.paymybuddy.config;
 
-import com.app.paymybuddy.service.CustomUserDetailsService;
+import com.app.paymybuddy.security.CustomUserDetailsService;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -13,19 +13,15 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+@AllArgsConstructor
 public class SecurityConfig {
 
-  private final CustomUserDetailsService customUserDetailsService;
-
-  public SecurityConfig(CustomUserDetailsService customUserDetailsService) {
-    this.customUserDetailsService = customUserDetailsService;
-  }
+  private CustomUserDetailsService customUserDetailsService;
 
   private static final String[] PUBLIC_PATHS = {
     "/",
     "/login",
     "/register",
-    "/relation",
     "/css/**",
     "/js/**",
     "/img/**",
@@ -60,7 +56,8 @@ public class SecurityConfig {
           .invalidateHttpSession(true)
           .deleteCookies("SESSION_PAYMYBUDDY")
           .permitAll()
-      );
+      )
+      .userDetailsService(customUserDetailsService);
 
     return http.build();
   }
@@ -68,13 +65,5 @@ public class SecurityConfig {
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
-  }
-
-  @Bean
-  public DaoAuthenticationProvider authenticationProvider() {
-    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-    authProvider.setUserDetailsService(customUserDetailsService);
-    authProvider.setPasswordEncoder(passwordEncoder());
-    return authProvider;
   }
 }
