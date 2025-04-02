@@ -13,15 +13,14 @@ import com.app.paymybuddy.security.CustomUserDetails;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
+@ExtendWith(MockitoExtension.class)
 class RelationServiceTest {
-
-  private static final String CURRENT_EMAIL = "current@example.com";
-  private static final String RELATION_EMAIL = "relation@example.com";
 
   @Mock
   private RelationRepository relationRepository;
@@ -35,16 +34,30 @@ class RelationServiceTest {
   @InjectMocks
   private RelationService relationService;
 
+  private static final String CURRENT_EMAIL = "current@example.com";
+  private static final String RELATION_EMAIL = "relation@example.com";
+  private RelationDto relationDto;
+
   @BeforeEach
   void setUp() {
-    MockitoAnnotations.openMocks(this);
+    relationDto = new RelationDto();
+    relationDto.setEmail(RELATION_EMAIL);
+  }
+
+  @Test
+  void findUserRelations_shouldReturnUserRelations() {
+    CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
+
+    when(authentication.getPrincipal()).thenReturn(customUserDetails);
+    when(customUserDetails.getUserId()).thenReturn(1);
+
+    relationService.findUserRelations(authentication);
+
+    verify(relationRepository, times(1)).findRelationsByUserId(1);
   }
 
   @Test
   void saveRelation_shouldThrowExceptionWhenCurrentUserAndRelationUserAreTheSame() {
-    RelationDto relationDto = new RelationDto();
-    relationDto.setEmail(RELATION_EMAIL);
-
     CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
     when(authentication.getPrincipal()).thenReturn(customUserDetails);
     when(authentication.getName()).thenReturn(RELATION_EMAIL);
@@ -56,9 +69,6 @@ class RelationServiceTest {
 
   @Test
   void saveRelation_shouldThrowExceptionWhenRelationUserNotFound() {
-    RelationDto relationDto = new RelationDto();
-    relationDto.setEmail(RELATION_EMAIL);
-
     CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
     when(authentication.getPrincipal()).thenReturn(customUserDetails);
     when(authentication.getName()).thenReturn(CURRENT_EMAIL);
@@ -74,9 +84,6 @@ class RelationServiceTest {
 
   @Test
   void saveRelation_shouldThrowExceptionWhenRelationAlreadyExists() {
-    RelationDto relationDto = new RelationDto();
-    relationDto.setEmail(RELATION_EMAIL);
-
     CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
     when(authentication.getPrincipal()).thenReturn(customUserDetails);
     when(authentication.getName()).thenReturn(CURRENT_EMAIL);
@@ -100,9 +107,6 @@ class RelationServiceTest {
 
   @Test
   void saveRelation_shouldSaveRelationSuccessfully() {
-    RelationDto relationDto = new RelationDto();
-    relationDto.setEmail(RELATION_EMAIL);
-
     CustomUserDetails customUserDetails = mock(CustomUserDetails.class);
     when(authentication.getPrincipal()).thenReturn(customUserDetails);
     when(customUserDetails.getUserId()).thenReturn(1);

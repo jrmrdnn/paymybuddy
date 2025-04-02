@@ -24,10 +24,17 @@ main {
   padding: 0 10px;
 }
 
+.container {
+  position: relative;
+  top: -89.5px;
+  width: 100%;
+  max-width: 1311px;
+  margin: 0 auto;
+}
+
 /* ---------------------
           Header
    --------------------- */
-
 .header {
   width: 100%;
   max-width: 1440px;
@@ -211,10 +218,7 @@ main {
 /* ---------------------
        Relation Page
    --------------------- */
-
 #relation-form {
-  position: relative;
-  top: -89.5px;
   max-width: 946px;
   height: 300px;
   display: flex;
@@ -252,6 +256,128 @@ main {
   margin: 0;
   font-weight: 500;
   background-color: #f69f1d;
+}
+
+/* ---------------------
+       Transfer Page
+   --------------------- */
+.transfer-container {
+  top: 0;
+  height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+#transfer-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 42px;
+  max-width: 100%;
+  padding: 18px;
+}
+
+.select-transfer {
+  width: 399px;
+  height: 81px;
+  padding: 0 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 24px;
+  font-weight: 300;
+  color: #000;
+  background: #fff
+    url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>')
+    no-repeat right 16.5px center;
+  background-size: 24px;
+  appearance: none;
+}
+
+#transfer-description {
+  width: 382px;
+  height: 81px;
+  padding: 0 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 24px;
+  font-weight: 300;
+}
+
+#transfer-description::placeholder {
+  top: calc(25% - 20px);
+  font-size: 24px;
+  font-weight: 300;
+  color: #000;
+}
+
+#transfer-amount {
+  width: 189px;
+  height: 121px;
+  padding: 0 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 24px;
+  font-weight: 300;
+}
+
+#transfer-amount::placeholder {
+  top: calc(25% - 30px);
+  font-size: 24px;
+  font-weight: 300;
+  color: #000;
+}
+
+#transfer-btn {
+  width: 120px;
+  height: 88px;
+  margin-right: 0px;
+}
+
+.transfer-card {
+  width: 100%;
+  height: 100%;
+  min-height: 426px;
+  padding: 25px;
+  border: #e0e0e0 1px solid;
+  border-radius: 8px;
+}
+
+.transfer-card > h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.transfer-table {
+  width: 100%;
+}
+
+.transfer-th {
+  height: 60px;
+  font-size: 24px;
+  font-weight: 600;
+  color: #000;
+  text-align: left;
+}
+
+.transfer-th:last-of-type {
+  text-align: right;
+  width: 200px;
+}
+
+.transfer-td {
+  height: 60px;
+  font-size: 24px;
+  font-weight: 500;
+  color: #000;
+  text-align: left;
+  border-top: 1px solid #e0e0e0;
+}
+
+.transfer-td:last-of-type {
+  text-align: right;
+  width: 200px;
 }
 
 /* ---------------------
@@ -303,5 +429,22 @@ main {
   to {
     transform: translateY(-100px);
     opacity: 0;
+  }
+}
+
+/* ---------------------
+      Media Queries
+   --------------------- */
+
+@media (max-width: 1270px) {
+  #transfer-form {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px 0;
+  }
+
+  #transfer-btn {
+    margin: 0 auto;
   }
 }

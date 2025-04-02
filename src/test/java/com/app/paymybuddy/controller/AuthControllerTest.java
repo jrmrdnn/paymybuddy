@@ -8,12 +8,14 @@ import com.app.paymybuddy.exception.EmailAlreadyUsedException;
 import com.app.paymybuddy.service.RegisterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 
+@ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
 
   @Mock
@@ -28,9 +30,11 @@ class AuthControllerTest {
   @InjectMocks
   private AuthController authController;
 
+  private UserRegisterDto userRegisterDto;
+
   @BeforeEach
   void setUp() {
-    MockitoAnnotations.openMocks(this);
+    userRegisterDto = new UserRegisterDto();
   }
 
   @Test
@@ -51,7 +55,6 @@ class AuthControllerTest {
 
   @Test
   void testRegisterUser_Success() throws EmailAlreadyUsedException {
-    UserRegisterDto userRegisterDto = new UserRegisterDto();
     when(bindingResult.hasErrors()).thenReturn(false);
 
     String viewName = authController.registerUser(
@@ -65,7 +68,6 @@ class AuthControllerTest {
 
   @Test
   void testRegisterUser_ValidationErrors() {
-    UserRegisterDto userRegisterDto = new UserRegisterDto();
     when(bindingResult.hasErrors()).thenReturn(true);
 
     String viewName = authController.registerUser(
@@ -80,7 +82,6 @@ class AuthControllerTest {
   @Test
   void testRegisterUser_EmailAlreadyUsedException()
     throws EmailAlreadyUsedException {
-    UserRegisterDto userRegisterDto = new UserRegisterDto();
     when(bindingResult.hasErrors()).thenReturn(false);
     doThrow(new EmailAlreadyUsedException("Email is already in use"))
       .when(registerService)
@@ -101,7 +102,6 @@ class AuthControllerTest {
 
   @Test
   void testRegisterUser_GenericException() throws EmailAlreadyUsedException {
-    UserRegisterDto userRegisterDto = new UserRegisterDto();
     when(bindingResult.hasErrors()).thenReturn(false);
     doThrow(new RuntimeException("Unexpected error"))
       .when(registerService)

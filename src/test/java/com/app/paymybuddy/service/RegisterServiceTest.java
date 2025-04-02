@@ -11,11 +11,13 @@ import com.app.paymybuddy.repository.UserRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+@ExtendWith(MockitoExtension.class)
 class RegisterServiceTest {
 
   @Mock
@@ -27,18 +29,18 @@ class RegisterServiceTest {
   @InjectMocks
   private RegisterService registerService;
 
+  private UserRegisterDto userDto;
+
   @BeforeEach
   void setUp() {
-    MockitoAnnotations.openMocks(this);
+    userDto = new UserRegisterDto();
+    userDto.setUsername("user");
+    userDto.setEmail("user@example.com");
+    userDto.setPassword("password");
   }
 
   @Test
   void saveUser_shouldSaveUser_whenEmailIsUnique() {
-    UserRegisterDto userDto = new UserRegisterDto();
-    userDto.setUsername("testuser");
-    userDto.setEmail("test@example.com");
-    userDto.setPassword("password");
-
     when(
       userRepository.findByEmailAndDeletedAtIsNull(userDto.getEmail())
     ).thenReturn(Optional.empty());
@@ -53,9 +55,6 @@ class RegisterServiceTest {
 
   @Test
   void saveUser_shouldThrowException_whenEmailIsAlreadyUsed() {
-    UserRegisterDto userDto = new UserRegisterDto();
-    userDto.setEmail("test@example.com");
-
     when(
       userRepository.findByEmailAndDeletedAtIsNull(userDto.getEmail())
     ).thenReturn(Optional.of(new User()));

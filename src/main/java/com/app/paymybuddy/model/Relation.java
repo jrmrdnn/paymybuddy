@@ -13,6 +13,8 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import java.time.LocalDateTime;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Data
 @Entity
@@ -23,6 +25,8 @@ public class Relation {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
 
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false, updatable = false)
   private User user;

@@ -1,6 +1,8 @@
 package com.app.paymybuddy.repository;
 
+import com.app.paymybuddy.dto.response.UserRelationDto;
 import com.app.paymybuddy.model.Relation;
+import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +11,17 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RelationRepository extends JpaRepository<Relation, Integer> {
+  /**
+   * Find all relations of a user
+   * @param userId
+   * @return Set<UserRelationDto>
+   */
+  @Query(
+    "SELECT new com.app.paymybuddy.dto.response.UserRelationDto(r.relationUser.username, r.relationUser.email) " +
+    "FROM Relation r WHERE r.user.id = :userId"
+  )
+  Set<UserRelationDto> findRelationsByUserId(@Param("userId") Integer userId);
+
   /**
    * Check if a relation exists between two users
    * @param userId

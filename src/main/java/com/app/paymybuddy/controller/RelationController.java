@@ -33,9 +33,9 @@ public class RelationController {
   @PostMapping("/relation")
   public String addRelation(
     @Valid @ModelAttribute("relationDto") RelationDto relationDto,
+    BindingResult bindingResult,
     RedirectAttributes redirectAttributes,
-    Authentication authentication,
-    BindingResult bindingResult
+    Authentication authentication
   ) {
     if (bindingResult.hasErrors()) return "relation";
 

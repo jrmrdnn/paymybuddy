@@ -13,8 +13,10 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Data
 @Entity
@@ -37,11 +39,15 @@ public class User {
   @Column(nullable = false)
   private String password;
 
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
   @OneToMany(mappedBy = "user")
-  private List<Relation> myRelations;
+  private Set<Relation> myRelations;
 
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
   @OneToMany(mappedBy = "relationUser")
-  private List<Relation> relatedToMe;
+  private Set<Relation> relatedToMe;
 
   @Column(
     name = "created_at",

@@ -4,14 +4,14 @@
     th:replace="~{fragments/head :: head('Relation | PayMyBuddy', 'Ajouter une relation')}"
   ></head>
   <body>
-    <header th:replace="fragments/header :: header('relation')"></header>
+    <header th:replace="~{fragments/header :: header('relation')}"></header>
     <div th:if="${errorMessage}" class="error-message">
       <p th:text="${errorMessage}"></p>
     </div>
     <main>
       <form
         id="relation-form"
-        class="form"
+        class="container form"
         th:action="@{/relation}"
         th:object="${relationDto}"
         method="post"

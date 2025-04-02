@@ -14,8 +14,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
    * @param UserId
    * @return Optional User
    */
-  @Query("SELECT u FROM User u WHERE u.id = :UserId")
-  Optional<User> findById(@Param("userId") int UserId);
+  @Query("SELECT u FROM User u WHERE u.id = :userId")
+  Optional<User> findById(@Param("userId") int userId);
 
   /**
    * Find a user by email
@@ -30,8 +30,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
    * @param UserId
    * @return Optional User
    */
-  @Query("SELECT u FROM User u WHERE u.id = :UserId AND u.deletedAt IS NULL")
-  Optional<User> findByIdAndDeletedAtIsNull(@Param("userId") Integer UserId);
+  @Query("SELECT u FROM User u WHERE u.id = :userId AND u.deletedAt IS NULL")
+  Optional<User> findByIdAndDeletedAtIsNull(@Param("userId") Integer userId);
 
   /**
    * Find a user by email and deletedAt is null

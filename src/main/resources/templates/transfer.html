@@ -4,14 +4,125 @@
     th:replace="~{fragments/head :: head('Transfer | PayMyBuddy', 'Transferer de l\'argent à un ami')}"
   ></head>
   <body class="body">
-    <header th:replace="fragments/header :: header('transfer')"></header>
+    <header th:replace="~{fragments/header :: header('transfer')}"></header>
     <div th:if="${successMessage}" class="success-message">
       <p th:text="${successMessage}"></p>
     </div>
     <div th:if="${errorMessage}" class="error-message">
       <p th:text="${errorMessage}"></p>
     </div>
-    <main>Page de transfert</main>
+    <main>
+      <div class="container transfer-container">
+        <section>
+          <form
+            id="transfer-form"
+            class="form"
+            th:action="@{/transfer}"
+            th:object="${transferDto}"
+            method="post"
+          >
+            <div class="form-control">
+              <label class="form-label-hidden" for="transfer-email"
+                >Relation</label
+              >
+              <select
+                id="transfer-email"
+                name="email"
+                class="select-transfer"
+                required
+              >
+                <option value="" disabled selected>
+                  Sélectionner une relation
+                </option>
+                <option
+                  th:each="relation : ${relations}"
+                  th:value="${relation.email}"
+                  th:text="${relation.username}"
+                ></option>
+              </select>
+              <span
+                class="form-span"
+                th:if="${#fields.hasErrors('email')}"
+                th:errors="*{email}"
+              ></span>
+            </div>
+            <div class="form-control">
+              <label class="form-label-hidden" for="transfer-description"
+                >Description</label
+              >
+              <input
+                id="transfer-description"
+                name="description"
+                type="text"
+                class="form-input"
+                placeholder="Description"
+                aria-required="true"
+                required
+              />
+              <span
+                class="form-span"
+                th:if="${#fields.hasErrors('description')}"
+                th:errors="*{description}"
+              ></span>
+            </div>
+            <div class="form-control-transfer-amount">
+              <label class="form-label-hidden" for="transfer-amount"
+                >Montant</label
+              >
+              <input
+                id="transfer-amount"
+                name="amount"
+                type="text"
+                class="form-input"
+                placeholder="0€"
+                aria-required="true"
+                required
+                pattern="^\d+([,]\d{1,2})?$"
+                title="Veuillez entrer un nombre valide avec une virgule comme séparateur décimal"
+              />
+              <span
+                class="form-span"
+                th:if="${#fields.hasErrors('amount')}"
+                th:errors="*{amount}"
+              ></span>
+            </div>
+            <button id="transfer-btn" class="form-btn" type="submit">
+              Payer
+            </button>
+          </form>
+        </section>
+        <section>
+          <div class="transfer-card">
+            <h1>Mes Transactions</h1>
+            <table class="transfer-table">
+              <thead>
+                <tr>
+                  <th class="transfer-th">Relations</th>
+                  <th class="transfer-th">Description</th>
+                  <th class="transfer-th">Montant</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="transaction : ${transactions}">
+                  <td
+                    class="transfer-td"
+                    th:text="${transaction.sender.username}"
+                  ></td>
+                  <td
+                    class="transfer-td"
+                    th:text="${transaction.description}"
+                  ></td>
+                  <td
+                    class="transfer-td amount"
+                    th:text="${transaction.amount}"
+                  ></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
     <footer></footer>
   </body>
 </html>

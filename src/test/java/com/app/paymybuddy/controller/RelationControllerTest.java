@@ -9,14 +9,16 @@ import com.app.paymybuddy.exception.UserNotFoundException;
 import com.app.paymybuddy.service.RelationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+@ExtendWith(MockitoExtension.class)
 class RelationControllerTest {
 
   @Mock
@@ -37,9 +39,11 @@ class RelationControllerTest {
   @InjectMocks
   private RelationController relationController;
 
+  private RelationDto relationDto;
+
   @BeforeEach
   void setUp() {
-    MockitoAnnotations.openMocks(this);
+    relationDto = new RelationDto();
   }
 
   @Test
@@ -58,14 +62,13 @@ class RelationControllerTest {
 
   @Test
   void testAddRelation_Success() throws Exception {
-    RelationDto relationDto = new RelationDto();
     when(bindingResult.hasErrors()).thenReturn(false);
 
     String viewName = relationController.addRelation(
       relationDto,
+      bindingResult,
       redirectAttributes,
-      authentication,
-      bindingResult
+      authentication
     );
 
     verify(relationService, times(1)).saveRelation(authentication, relationDto);
@@ -78,14 +81,13 @@ class RelationControllerTest {
 
   @Test
   void testAddRelation_BindingErrors() {
-    RelationDto relationDto = new RelationDto();
     when(bindingResult.hasErrors()).thenReturn(true);
 
     String viewName = relationController.addRelation(
       relationDto,
+      bindingResult,
       redirectAttributes,
-      authentication,
-      bindingResult
+      authentication
     );
 
     assertEquals("relation", viewName);
@@ -94,7 +96,6 @@ class RelationControllerTest {
 
   @Test
   void testAddRelation_RelationAlreadyExistsException() throws Exception {
-    RelationDto relationDto = new RelationDto();
     when(bindingResult.hasErrors()).thenReturn(false);
     doThrow(new RelationAlreadyExistsException("Relation already exists"))
       .when(relationService)
@@ -102,9 +103,9 @@ class RelationControllerTest {
 
     String viewName = relationController.addRelation(
       relationDto,
+      bindingResult,
       redirectAttributes,
-      authentication,
-      bindingResult
+      authentication
     );
 
     verify(bindingResult, times(1)).rejectValue(
@@ -117,7 +118,6 @@ class RelationControllerTest {
 
   @Test
   void testAddRelation_UserNotFoundException() throws Exception {
-    RelationDto relationDto = new RelationDto();
     when(bindingResult.hasErrors()).thenReturn(false);
     doThrow(new UserNotFoundException("User not found"))
       .when(relationService)
@@ -125,9 +125,9 @@ class RelationControllerTest {
 
     String viewName = relationController.addRelation(
       relationDto,
+      bindingResult,
       redirectAttributes,
-      authentication,
-      bindingResult
+      authentication
     );
 
     verify(bindingResult, times(1)).rejectValue(
@@ -140,7 +140,6 @@ class RelationControllerTest {
 
   @Test
   void testAddRelation_GenericException() throws Exception {
-    RelationDto relationDto = new RelationDto();
     when(bindingResult.hasErrors()).thenReturn(false);
     doThrow(new RuntimeException("Unexpected error"))
       .when(relationService)
@@ -148,9 +147,9 @@ class RelationControllerTest {
 
     String viewName = relationController.addRelation(
       relationDto,
+      bindingResult,
       redirectAttributes,
-      authentication,
-      bindingResult
+      authentication
     );
 
     verify(redirectAttributes, times(1)).addFlashAttribute(

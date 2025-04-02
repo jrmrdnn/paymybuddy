@@ -1,12 +1,14 @@
 package com.app.paymybuddy.service;
 
 import com.app.paymybuddy.dto.request.RelationDto;
+import com.app.paymybuddy.dto.response.UserRelationDto;
 import com.app.paymybuddy.exception.RelationAlreadyExistsException;
 import com.app.paymybuddy.exception.UserNotFoundException;
 import com.app.paymybuddy.model.User;
 import com.app.paymybuddy.repository.RelationRepository;
 import com.app.paymybuddy.repository.UserRepository;
 import com.app.paymybuddy.security.CustomUserDetails;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,20 @@ public class RelationService {
 
   private final RelationRepository relationRepository;
   private final UserRepository userRepository;
+
+  /**
+   * Find the relations of the current user.
+   * @param authentication
+   * @return Set<UserRelationDto>
+   */
+  public Set<UserRelationDto> findUserRelations(Authentication authentication) {
+    // 1. Get the current user id
+    Integer currentUserId =
+      ((CustomUserDetails) authentication.getPrincipal()).getUserId();
+
+    // 2. Find the relations of the current user
+    return relationRepository.findRelationsByUserId(currentUserId);
+  }
 
   /**
    * Save a new relation.
@@ -42,7 +58,7 @@ public class RelationService {
     );
 
     // 3. Find the relation user by email
-    User relationUser = findRelationUserByEmail(relationUserEmail);
+    User relationUser = findUserByEmail(relationUserEmail);
 
     // 4. Check if the relation already exists
     checkRelationExists(currentUserId, relationUser);
@@ -72,7 +88,7 @@ public class RelationService {
    * @param relationUserEmail
    * @return User
    */
-  private User findRelationUserByEmail(String relationUserEmail) {
+  private User findUserByEmail(String relationUserEmail) {
     return userRepository
       .findByEmailAndDeletedAtIsNull(relationUserEmail)
       .orElseThrow(() -> new UserNotFoundException("Relation non trouvée"));
