@@ -1,11 +1,13 @@
 package com.app.paymybuddy.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.app.paymybuddy.dto.request.TransferDto;
+import com.app.paymybuddy.exception.InsufficientBalanceException;
 import com.app.paymybuddy.exception.UserNotFoundException;
 import com.app.paymybuddy.model.Transaction;
 import com.app.paymybuddy.model.User;
@@ -101,24 +103,6 @@ public class TransactionServiceTest {
   }
 
   @Test
-  void saveTransaction_shouldSaveSuccessfully() {
-    TransferDto transferDto = new TransferDto();
-    transferDto.setEmail("receiver@test.com");
-    transferDto.setAmount("100.50");
-    transferDto.setDescription("Transfer");
-
-    when(
-      userRepository.findByEmailAndDeletedAtIsNull("receiver@test.com")
-    ).thenReturn(Optional.of(receiver));
-
-    assertDoesNotThrow(() ->
-      transactionService.saveTransaction(authentication, transferDto)
-    );
-
-    verify(transactionRepository).save(100.50, "Transfer", 1, 2);
-  }
-
-  @Test
   void saveTransaction_shouldThrowUserNotFoundException() {
     TransferDto transferDto = new TransferDto();
     transferDto.setEmail("no_existent@test.com");
@@ -156,5 +140,92 @@ public class TransactionServiceTest {
     );
 
     assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void saveTransaction_withZeroAmount_shouldThrowInsufficientBalanceException() {
+    TransferDto transferDto = new TransferDto();
+    transferDto.setEmail("receiver@test.com");
+    transferDto.setAmount("0.0");
+    transferDto.setDescription("Invalid Transfer");
+
+    assertThrows(InsufficientBalanceException.class, () ->
+      transactionService.saveTransaction(authentication, transferDto)
+    );
+
+    verify(transactionRepository, never()).save(
+      anyDouble(),
+      anyString(),
+      anyInt(),
+      anyInt()
+    );
+  }
+
+  @Test
+  void saveTransaction_withNegativeAmount_shouldThrowInsufficientBalanceException() {
+    TransferDto transferDto = new TransferDto();
+    transferDto.setEmail("receiver@test.com");
+    transferDto.setAmount("-50.0");
+    transferDto.setDescription("Invalid Transfer");
+
+    assertThrows(InsufficientBalanceException.class, () ->
+      transactionService.saveTransaction(authentication, transferDto)
+    );
+
+    verify(transactionRepository, never()).save(
+      anyDouble(),
+      anyString(),
+      anyInt(),
+      anyInt()
+    );
+  }
+
+  @Test
+  void saveTransaction_withInsufficientBalance_shouldThrowInsufficientBalanceException() {
+    TransferDto transferDto = new TransferDto();
+    transferDto.setEmail("receiver@test.com");
+    transferDto.setAmount("100.50");
+    transferDto.setDescription("Transfer");
+
+    when(
+      userRepository.findByEmailAndDeletedAtIsNull("receiver@test.com")
+    ).thenReturn(Optional.of(receiver));
+
+    when(
+      transactionRepository.calculateNetTransactionAmountByUserId(1)
+    ).thenReturn(50.0);
+
+    assertThrows(InsufficientBalanceException.class, () ->
+      transactionService.saveTransaction(authentication, transferDto)
+    );
+
+    verify(transactionRepository, never()).save(
+      anyDouble(),
+      anyString(),
+      anyInt(),
+      anyInt()
+    );
+  }
+
+  @Test
+  void saveTransaction_withCommaDecimalSeparator_shouldParseAmountCorrectly() {
+    TransferDto transferDto = new TransferDto();
+    transferDto.setEmail("receiver@test.com");
+    transferDto.setAmount("100,50");
+    transferDto.setDescription("Transfer with comma");
+
+    when(
+      userRepository.findByEmailAndDeletedAtIsNull("receiver@test.com")
+    ).thenReturn(Optional.of(receiver));
+
+    when(
+      transactionRepository.calculateNetTransactionAmountByUserId(1)
+    ).thenReturn(200.0);
+
+    assertDoesNotThrow(() ->
+      transactionService.saveTransaction(authentication, transferDto)
+    );
+
+    verify(transactionRepository).save(100.50, "Transfer with comma", 1, 2);
   }
 }

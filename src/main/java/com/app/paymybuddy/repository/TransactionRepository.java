@@ -28,6 +28,19 @@ public interface TransactionRepository
   );
 
   /**
+   * Calculate the net sum of transactions for a user
+   * @param userId
+   * @return double
+   */
+  @Query(
+    "SELECT ( " +
+    "  (SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.receiver.id = :userId) - " +
+    "  (SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.sender.id = :userId) " +
+    ")"
+  )
+  double calculateNetTransactionAmountByUserId(@Param("userId") int userId);
+
+  /**
    * Save a transaction
    * @param currentUserId
    * @param receiverUserId

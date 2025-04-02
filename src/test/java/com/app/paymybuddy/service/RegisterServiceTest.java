@@ -12,6 +12,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -29,6 +31,9 @@ class RegisterServiceTest {
   @InjectMocks
   private RegisterService registerService;
 
+  @Mock
+  private BankAccountService bankAccountService;
+
   private UserRegisterDto userDto;
 
   @BeforeEach
@@ -40,7 +45,38 @@ class RegisterServiceTest {
   }
 
   @Test
-  void saveUser_shouldSaveUser_whenEmailIsUnique() {
+  void saveUser_shouldCreateBankAccount_afterSavingUser() {
+    when(
+      userRepository.findByEmailAndDeletedAtIsNull(userDto.getEmail())
+    ).thenReturn(Optional.empty());
+    when(passwordEncoder.encode(userDto.getPassword())).thenReturn(
+      "encodedPassword"
+    );
+
+    ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+
+    registerService.saveUser(userDto);
+
+    verify(userRepository).save(userCaptor.capture());
+
+    verify(bankAccountService).createBankAccount(userCaptor.getValue());
+  }
+
+  @Test
+  void saveUser_shouldNotCreateBankAccount_whenEmailIsAlreadyUsed() {
+    when(
+      userRepository.findByEmailAndDeletedAtIsNull(userDto.getEmail())
+    ).thenReturn(Optional.of(new User()));
+
+    assertThrows(EmailAlreadyUsedException.class, () ->
+      registerService.saveUser(userDto)
+    );
+
+    verify(bankAccountService, never()).createBankAccount(any());
+  }
+
+  @Test
+  void saveUser_shouldExecuteInCorrectOrder() {
     when(
       userRepository.findByEmailAndDeletedAtIsNull(userDto.getEmail())
     ).thenReturn(Optional.empty());
@@ -50,18 +86,8 @@ class RegisterServiceTest {
 
     registerService.saveUser(userDto);
 
-    verify(userRepository, times(1)).save(any(User.class));
-  }
-
-  @Test
-  void saveUser_shouldThrowException_whenEmailIsAlreadyUsed() {
-    when(
-      userRepository.findByEmailAndDeletedAtIsNull(userDto.getEmail())
-    ).thenReturn(Optional.of(new User()));
-
-    assertThrows(EmailAlreadyUsedException.class, () ->
-      registerService.saveUser(userDto)
-    );
-    verify(userRepository, never()).save(any(User.class));
+    InOrder inOrder = inOrder(userRepository, bankAccountService);
+    inOrder.verify(userRepository).save(any(User.class));
+    inOrder.verify(bankAccountService).createBankAccount(any(User.class));
   }
 }

@@ -278,6 +278,10 @@ main {
   padding: 18px;
 }
 
+#transfer-form .form-span {
+  top: 85px;
+}
+
 .select-transfer {
   width: 399px;
   height: 81px;
@@ -319,6 +323,10 @@ main {
   border-radius: 8px;
   font-size: 24px;
   font-weight: 300;
+}
+
+#transfer-error-amount {
+  top: 125px !important;
 }
 
 #transfer-amount::placeholder {

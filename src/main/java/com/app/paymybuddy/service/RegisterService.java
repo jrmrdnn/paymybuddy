@@ -15,6 +15,7 @@ public class RegisterService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
+  private final BankAccountService bankAccountService;
 
   /**
    * Save a new user.
@@ -33,6 +34,9 @@ public class RegisterService {
 
     // 3. Set the role to USER
     userRepository.save(user);
+
+    // 4. Create the bank account
+    bankAccountService.createBankAccount(user);
   }
 
   /**

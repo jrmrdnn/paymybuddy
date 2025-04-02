@@ -65,7 +65,7 @@
                 th:errors="*{description}"
               ></span>
             </div>
-            <div class="form-control-transfer-amount">
+            <div class="form-control">
               <label class="form-label-hidden" for="transfer-amount"
                 >Montant</label
               >
@@ -81,6 +81,7 @@
                 title="Veuillez entrer un nombre valide avec une virgule comme séparateur décimal"
               />
               <span
+                id="transfer-error-amount"
                 class="form-span"
                 th:if="${#fields.hasErrors('amount')}"
                 th:errors="*{amount}"

@@ -1,6 +1,7 @@
 package com.app.paymybuddy.service;
 
 import com.app.paymybuddy.dto.request.TransferDto;
+import com.app.paymybuddy.exception.InsufficientBalanceException;
 import com.app.paymybuddy.exception.UserNotFoundException;
 import com.app.paymybuddy.model.Transaction;
 import com.app.paymybuddy.model.User;
@@ -56,12 +57,31 @@ public class TransactionService {
     // 1. Get the current user id
     Integer currentUserId = getCurrentUserId(authentication);
 
-    // 2. Find the receiver user by email
+    // 2. Check amount is valid
+    if (parseAmount(transfer.getAmount()) <= 0) {
+      throw new InsufficientBalanceException(
+        "Le montant doit être supérieur à 0"
+      );
+    }
+
+    // 3. Find the receiver user by email
     User receiver = userRepository
       .findByEmailAndDeletedAtIsNull(transfer.getEmail())
       .orElseThrow(() -> new UserNotFoundException());
 
-    // 3. Create a new transaction
+    // 4. Calculate the net transaction amount
+    double amount = transactionRepository.calculateNetTransactionAmountByUserId(
+      currentUserId
+    );
+
+    // 5. Check if the user has enough balance
+    if (amount < parseAmount(transfer.getAmount())) {
+      throw new InsufficientBalanceException(
+        "Le solde de votre compte est insuffisant pour effectuer cette opération"
+      );
+    }
+
+    // 6. Create a new transaction
     transactionRepository.save(
       parseAmount(transfer.getAmount()),
       transfer.getDescription(),
@@ -81,6 +101,11 @@ public class TransactionService {
     ).getUserId();
   }
 
+  /**
+   * Parse the amount from a string to a double.
+   * @param amountStr
+   * @return double
+   */
   private double parseAmount(String amountStr) throws NumberFormatException {
     return Double.parseDouble(amountStr.replace(',', '.'));
   }
