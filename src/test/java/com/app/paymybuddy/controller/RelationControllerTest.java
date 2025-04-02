@@ -119,7 +119,7 @@ class RelationControllerTest {
   @Test
   void testAddRelation_UserNotFoundException() throws Exception {
     when(bindingResult.hasErrors()).thenReturn(false);
-    doThrow(new UserNotFoundException("User not found"))
+    doThrow(new UserNotFoundException())
       .when(relationService)
       .saveRelation(authentication, relationDto);
 
@@ -133,7 +133,7 @@ class RelationControllerTest {
     verify(bindingResult, times(1)).rejectValue(
       "email",
       "error.relation",
-      "User not found"
+      "Utilisateur non trouvé"
     );
     assertEquals("relation", viewName);
   }

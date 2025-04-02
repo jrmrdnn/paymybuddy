@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+  <head
+    th:replace="~{fragments/head :: head('Profil | PayMyBuddy', 'Modifier votre profil')}"
+  ></head>
+  <body class="body">
+    <header th:replace="fragments/header :: header('profil')"></header>
+    <main>
+      <form
+        id="profil-form"
+        class="container form"
+        th:action="@{/profil}"
+        th:object="${userUpdateDto}"
+        method="post"
+      >
+        <div class="form-control">
+          <label class="form-label" for="profil-username">Username</label>
+          <input
+            id="profil-username"
+            name="username"
+            type="text"
+            class="form-input"
+            th:field="*{username}"
+            th:value="${userUpdateDto.username}"
+            placeholder="@username"
+          />
+          <span
+            class="form-span"
+            th:if="${#fields.hasErrors('username')}"
+            th:errors="*{username}"
+          ></span>
+        </div>
+        <div class="form-control">
+          <label class="form-label" for="profil-email">Mail</label>
+          <input
+            id="profil-email"
+            name="email"
+            type="email"
+            class="form-input"
+            th:field="*{email}"
+            th:value="${userUpdateDto.email}"
+            placeholder="nom@domain.com"
+          />
+          <span
+            class="form-span"
+            th:if="${#fields.hasErrors('email')}"
+            th:errors="*{email}"
+          ></span>
+        </div>
+        <div class="form-control">
+          <label class="form-label" for="profil-password">Mot de passe</label>
+          <input
+            id="profil-password"
+            name="password"
+            type="password"
+            class="form-input"
+            th:field="*{password}"
+            placeholder="mot de passe"
+          />
+          <span
+            class="form-span"
+            th:if="${#fields.hasErrors('password')}"
+            th:errors="*{password}"
+          ></span>
+          <button id="profil-btn" class="form-btn" type="submit">
+            Modifier
+          </button>
+        </div>
+      </form>
+    </main>
+    <footer></footer>
+  </body>
+</html>

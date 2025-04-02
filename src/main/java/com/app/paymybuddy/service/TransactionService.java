@@ -59,7 +59,7 @@ public class TransactionService {
     // 2. Find the receiver user by email
     User receiver = userRepository
       .findByEmailAndDeletedAtIsNull(transfer.getEmail())
-      .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
+      .orElseThrow(() -> new UserNotFoundException());
 
     // 3. Create a new transaction
     transactionRepository.save(
@@ -85,6 +85,12 @@ public class TransactionService {
     return Double.parseDouble(amountStr.replace(',', '.'));
   }
 
+  /**
+   * Transform the transactions to show the correct sender and receiver.
+   * @param currentUserId
+   * @param transactions
+   * @return List<Transaction>
+   */
   private List<Transaction> transformTransactionList(
     Integer currentUserId,
     Page<Transaction> transactions

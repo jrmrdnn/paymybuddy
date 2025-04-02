@@ -91,7 +91,7 @@ public class RelationService {
   private User findUserByEmail(String relationUserEmail) {
     return userRepository
       .findByEmailAndDeletedAtIsNull(relationUserEmail)
-      .orElseThrow(() -> new UserNotFoundException("Relation non trouvée"));
+      .orElseThrow(() -> new UserNotFoundException());
   }
 
   /**

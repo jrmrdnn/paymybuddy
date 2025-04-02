@@ -51,7 +51,7 @@ public class TransferControllerTest {
   private TransferController transferController;
 
   @Test
-  void showTransferPage_ShouldAddAttributesAndReturnTransferView() {
+  public void showTransferPage_ShouldAddAttributesAndReturnTransferView() {
     Set<UserRelationDto> relations = new HashSet<>();
     List<Transaction> transactions = new ArrayList<>();
 
@@ -86,7 +86,7 @@ public class TransferControllerTest {
   }
 
   @Test
-  void addTransfer_WithBindingErrors_ShouldReturnTransferView() {
+  public void addTransfer_WithBindingErrors_ShouldReturnTransferView() {
     TransferDto transferDto = new TransferDto();
 
     when(bindingResult.hasErrors()).thenReturn(true);
@@ -110,7 +110,7 @@ public class TransferControllerTest {
   }
 
   @Test
-  void addTransfer_SuccessfulTransfer_ShouldRedirect() {
+  public void addTransfer_SuccessfulTransfer_ShouldRedirect() {
     TransferDto transferDto = new TransferDto();
     when(bindingResult.hasErrors()).thenReturn(false);
 
@@ -132,11 +132,11 @@ public class TransferControllerTest {
   }
 
   @Test
-  void addTransfer_WithUserNotFoundException_ShouldReturnTransferView() {
+  public void addTransfer_WithUserNotFoundException_ShouldReturnTransferView() {
     TransferDto transferDto = new TransferDto();
 
     when(bindingResult.hasErrors()).thenReturn(false);
-    doThrow(new UserNotFoundException("User not found"))
+    doThrow(new UserNotFoundException())
       .when(transactionService)
       .saveTransaction(any(Authentication.class), any(TransferDto.class));
 
@@ -151,7 +151,7 @@ public class TransferControllerTest {
     verify(bindingResult).rejectValue(
       "email",
       "error.transferDto",
-      "User not found"
+      "Utilisateur non trouvé"
     );
     verify(relationService).findUserRelations(authentication);
     verify(transactionService).getTransactionHistory(
@@ -163,7 +163,7 @@ public class TransferControllerTest {
   }
 
   @Test
-  void addTransfer_WithInsufficientBalanceException_ShouldReturnTransferView() {
+  public void addTransfer_WithInsufficientBalanceException_ShouldReturnTransferView() {
     TransferDto transferDto = new TransferDto();
 
     when(bindingResult.hasErrors()).thenReturn(false);
@@ -194,7 +194,7 @@ public class TransferControllerTest {
   }
 
   @Test
-  void addTransfer_WithGenericException_ShouldReturnTransferView() {
+  public void addTransfer_WithGenericException_ShouldReturnTransferView() {
     TransferDto transferDto = new TransferDto();
 
     when(bindingResult.hasErrors()).thenReturn(false);

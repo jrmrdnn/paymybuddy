@@ -369,7 +369,7 @@ main {
 .transfer-td {
   height: 60px;
   font-size: 24px;
-  font-weight: 500;
+  font-weight: 400;
   color: #000;
   text-align: left;
   border-top: 1px solid #e0e0e0;
@@ -380,6 +380,70 @@ main {
   width: 200px;
 }
 
+/* ---------------------
+       Profil Page
+   --------------------- */
+#profil-form {
+  max-width: 709px;
+  height: 317px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px 0;
+}
+
+#profil-form .form-control {
+  display: flex;
+  align-items: center;
+  gap: 0 12px;
+  width: 100%;
+  max-width: 527px;
+}
+
+#profil-form .form-control::before {
+  content: ">";
+  position: absolute;
+  top: 50%;
+  left: 400px;
+  transform: translateY(-50%);
+  font-size: 20px;
+  font-weight: 500;
+  color: #828282;
+}
+
+#profil-form .form-control:last-of-type {
+  max-width: 636px;
+}
+
+#profil-form .form-control:last-of-type .form-span {
+  top: 100px;
+}
+
+#profil-form .form-control > label {
+  width: 156px;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+#profil-form .form-control > input {
+  max-width: 231px;
+  border: none;
+  background: none;
+}
+
+#profil-form .form-control > input::placeholder {
+  top: calc(25% - 15px);
+  font-size: 20px;
+  font-weight: 400;
+  color: #000;
+}
+
+#profil-btn {
+  position: absolute;
+  top: 15px;
+  right: 10px;
+  width: 147px;
+  background-color: #f69f1d;
+}
 /* ---------------------
         Messages
    --------------------- */
