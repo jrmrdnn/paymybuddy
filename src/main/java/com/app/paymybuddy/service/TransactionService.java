@@ -5,22 +5,27 @@ import com.app.paymybuddy.exception.InsufficientBalanceException;
 import com.app.paymybuddy.exception.UserNotFoundException;
 import com.app.paymybuddy.model.Transaction;
 import com.app.paymybuddy.model.User;
+import com.app.paymybuddy.repository.BankAccountRepository;
 import com.app.paymybuddy.repository.TransactionRepository;
 import com.app.paymybuddy.repository.UserRepository;
+import com.app.paymybuddy.security.CustomUserDetails;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class TransactionService {
 
   private final TransactionRepository transactionRepository;
+  private final BankAccountRepository bankAccountRepository;
   private final UserRepository userRepository;
 
   /**
@@ -58,32 +63,37 @@ public class TransactionService {
     Integer currentUserId = getCurrentUserId(authentication);
 
     // 2. Check amount is valid
-    if (parseAmount(transfer.getAmount()) <= 0) {
-      throw new InsufficientBalanceException(
-        "Le montant doit être supérieur à 0"
-      );
-    }
+    double transferAmount = parseAmount(transfer.getAmount());
+    checkIfAmountIsValid(transferAmount);
 
     // 3. Find the receiver user by email
     User receiver = userRepository
       .findByEmailAndDeletedAtIsNull(transfer.getEmail())
       .orElseThrow(() -> new UserNotFoundException());
 
-    // 4. Calculate the net transaction amount
-    double amount = transactionRepository.calculateNetTransactionAmountByUserId(
-      currentUserId
+    // 4. Calculate the net transaction amount for the current user
+    double transaction =
+      transactionRepository.calculateNetTransactionAmountByUserId(
+        currentUserId
+      );
+
+    // 5. Find the bank account of the current user
+    double bankAccount = bankAccountRepository
+      .findByUserId(currentUserId)
+      .orElseThrow(() -> new UserNotFoundException())
+      .getBalance();
+
+    // 6. Check if the user has enough balance
+    checkIfSufficientBalance(
+      currentUserId,
+      bankAccount,
+      transferAmount,
+      transaction
     );
 
-    // 5. Check if the user has enough balance
-    if (amount < parseAmount(transfer.getAmount())) {
-      throw new InsufficientBalanceException(
-        "Le solde de votre compte est insuffisant pour effectuer cette opération"
-      );
-    }
-
-    // 6. Create a new transaction
+    // 7. Create a new transaction
     transactionRepository.save(
-      parseAmount(transfer.getAmount()),
+      transferAmount,
       transfer.getDescription(),
       currentUserId,
       receiver.getId()
@@ -96,9 +106,7 @@ public class TransactionService {
    * @return Integer
    */
   private Integer getCurrentUserId(Authentication authentication) {
-    return (
-      (com.app.paymybuddy.security.CustomUserDetails) authentication.getPrincipal()
-    ).getUserId();
+    return ((CustomUserDetails) authentication.getPrincipal()).getUserId();
   }
 
   /**
@@ -108,6 +116,62 @@ public class TransactionService {
    */
   private double parseAmount(String amountStr) throws NumberFormatException {
     return Double.parseDouble(amountStr.replace(',', '.'));
+  }
+
+  /**
+   * Check if the amount is valid.
+   * @param amount
+   */
+  private void checkIfAmountIsValid(double amount) {
+    log.info("Transfer amount: {}", amount);
+    if (amount <= 0) {
+      throw new InsufficientBalanceException(
+        "Le montant doit être supérieur à 0"
+      );
+    }
+  }
+
+  /**
+   * Check if the user has enough balance.
+   * @param currentUserId
+   * @param bankAccount
+   * @param transferAmount
+   * @param transaction
+   */
+  private void checkIfSufficientBalance(
+    Integer currentUserId,
+    double bankAccount,
+    double transferAmount,
+    double transaction
+  ) {
+    log.info(
+      "🏛️ Bank account balance for user {}: {}",
+      currentUserId,
+      bankAccount
+    );
+    log.info(
+      "💸 Net transaction amount for user {}: {}",
+      currentUserId,
+      transaction
+    );
+    double cash = bankAccount + transaction;
+    log.info("💰 Cash available for user {}: {}", currentUserId, cash);
+    if (cash < transferAmount) {
+      log.error(
+        "⚠️ Insufficient balance for user {}: {} < {}",
+        currentUserId,
+        cash,
+        transferAmount
+      );
+      throw new InsufficientBalanceException(
+        "Le solde de votre compte est insuffisant pour effectuer cette opération"
+      );
+    }
+    log.info(
+      "💰 New cash available for user {}: {}",
+      currentUserId,
+      cash - transferAmount
+    );
   }
 
   /**

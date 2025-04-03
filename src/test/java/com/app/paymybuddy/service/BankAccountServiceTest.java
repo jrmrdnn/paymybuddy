@@ -7,7 +7,6 @@ import static org.mockito.Mockito.verify;
 import com.app.paymybuddy.model.BankAccount;
 import com.app.paymybuddy.model.User;
 import com.app.paymybuddy.repository.BankAccountRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
