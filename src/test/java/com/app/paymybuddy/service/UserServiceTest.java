@@ -1,10 +1,12 @@
 package com.app.paymybuddy.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.app.paymybuddy.dto.request.UserUpdateDto;
+import com.app.paymybuddy.exception.EmailAlreadyUsedException;
 import com.app.paymybuddy.exception.UserNotFoundException;
 import com.app.paymybuddy.model.User;
 import com.app.paymybuddy.repository.UserRepository;
@@ -37,126 +39,187 @@ public class UserServiceTest {
   @InjectMocks
   private UserService userService;
 
-  private User testUser;
-  private UserUpdateDto updateDto;
+  private User currentUser;
+  private UserUpdateDto userUpdate;
   private final Integer userId = 1;
 
   @BeforeEach
   void setUp() {
-    testUser = new User();
-    testUser.setId(userId);
-    testUser.setUsername("testUser");
-    testUser.setEmail("test@example.com");
-    testUser.setPassword("encodedPassword");
+    currentUser = new User();
+    currentUser.setId(userId);
+    currentUser.setUsername("user");
+    currentUser.setEmail("test@example.com");
+    currentUser.setPassword("encodedPassword");
 
-    updateDto = new UserUpdateDto();
-    updateDto.setUsername("updatedUser");
-    updateDto.setEmail("updated@example.com");
+    userUpdate = new UserUpdateDto();
+    userUpdate.setUsername("updatedUser");
+    userUpdate.setEmail("updated@example.com");
 
     when(authentication.getPrincipal()).thenReturn(customUserDetails);
     when(customUserDetails.getUserId()).thenReturn(userId);
   }
 
   @Test
-  void findById_ShouldReturnUser_WhenUserExists() {
+  void findById_whenUserExists_shouldReturnUser() {
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(
-      Optional.of(testUser)
+      Optional.of(currentUser)
     );
 
     User result = userService.findById(authentication);
 
-    assertEquals(testUser, result);
-    verify(userRepository).findByIdAndDeletedAtIsNull(userId);
+    assertNotNull(result);
+    assertEquals(userId, result.getId());
+    assertEquals("user", result.getUsername());
+    assertEquals("test@example.com", result.getEmail());
   }
 
   @Test
-  void findById_ShouldThrowException_WhenUserNotFound() {
+  void findById_whenUserNotFound_shouldThrowException() {
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(
       Optional.empty()
     );
 
-    assertThrows(UserNotFoundException.class, () ->
-      userService.findById(authentication)
+    UserNotFoundException exception = assertThrows(
+      UserNotFoundException.class,
+      () -> userService.findById(authentication)
     );
+
+    assertEquals("Utilisateur non trouvé", exception.getMessage());
   }
 
   @Test
-  void updateUser_ShouldUpdateUserInfo_WhenUserExists() {
-    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(
-      Optional.of(testUser)
+  void updateUser_withSameEmail_shouldNotCheckEmailUniqueness() {
+    userUpdate.setEmail("test@example.com");
+    when(userRepository.findByIdAndDeletedAtIsNull(1)).thenReturn(
+      Optional.of(currentUser)
     );
 
-    userService.updateUser(authentication, updateDto);
+    userService.updateUser(authentication, userUpdate);
 
-    assertEquals(updateDto.getUsername(), testUser.getUsername());
-    assertEquals(updateDto.getEmail(), testUser.getEmail());
-    verify(userRepository).save(testUser);
+    verify(userRepository, never()).findByEmail(anyString());
+    verify(userRepository).save(currentUser);
+    assertEquals("updatedUser", currentUser.getUsername());
+    assertEquals("test@example.com", currentUser.getEmail());
   }
 
   @Test
-  void updateUser_ShouldUpdatePassword_WhenPasswordProvided() {
-    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(
-      Optional.of(testUser)
+  void updateUser_withNewUniqueEmail_shouldUpdateUser() {
+    userUpdate.setEmail("new.email@example.com");
+    when(userRepository.findByIdAndDeletedAtIsNull(1)).thenReturn(
+      Optional.of(currentUser)
     );
-    updateDto.setPassword("NewPass1!");
-    when(passwordEncoder.encode(updateDto.getPassword())).thenReturn(
-      "newEncodedPassword"
+    when(userRepository.findByEmail("new.email@example.com")).thenReturn(
+      Optional.empty()
     );
 
-    userService.updateUser(authentication, updateDto);
+    userService.updateUser(authentication, userUpdate);
 
-    assertEquals("newEncodedPassword", testUser.getPassword());
-    verify(passwordEncoder).encode(updateDto.getPassword());
+    verify(userRepository).findByEmail("new.email@example.com");
+    verify(userRepository).save(currentUser);
+    assertEquals("updatedUser", currentUser.getUsername());
+    assertEquals("new.email@example.com", currentUser.getEmail());
   }
 
   @Test
-  void updateUser_ShouldThrowException_WhenPasswordInvalid() {
-    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(
-      Optional.of(testUser)
-    );
-    updateDto.setPassword("invalid");
+  void updateUser_withExistingEmail_shouldThrowException() {
+    userUpdate.setEmail("existing@example.com");
+    User existingUser = new User();
+    existingUser.setId(2);
+    existingUser.setEmail("existing@example.com");
 
-    assertThrows(IllegalArgumentException.class, () ->
-      userService.updateUser(authentication, updateDto)
+    when(userRepository.findByIdAndDeletedAtIsNull(1)).thenReturn(
+      Optional.of(currentUser)
     );
+    when(userRepository.findByEmail("existing@example.com")).thenReturn(
+      Optional.of(existingUser)
+    );
+
+    EmailAlreadyUsedException exception = assertThrows(
+      EmailAlreadyUsedException.class,
+      () -> userService.updateUser(authentication, userUpdate)
+    );
+
+    assertEquals(
+      "L'email est déjà utilisé par un autre utilisateur.",
+      exception.getMessage()
+    );
+    verify(userRepository, never()).save(any(User.class));
   }
 
   @Test
-  void updateUser_ShouldThrowException_WhenUserNotFound() {
-    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(
+  void updateUser_userNotFound_shouldThrowException() {
+    when(userRepository.findByIdAndDeletedAtIsNull(1)).thenReturn(
       Optional.empty()
     );
 
     assertThrows(UserNotFoundException.class, () ->
-      userService.updateUser(authentication, updateDto)
+      userService.updateUser(authentication, userUpdate)
     );
+
+    verify(userRepository, never()).save(any(User.class));
   }
 
   @Test
-  void updateUser_ShouldNotUpdatePassword_WhenPasswordIsEmpty() {
+  void updateUser_withValidPassword_shouldEncodeAndUpdatePassword() {
+    userUpdate.setPassword("Valid1Password!");
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(
-      Optional.of(testUser)
+      Optional.of(currentUser)
     );
-    updateDto.setPassword("");
+    when(passwordEncoder.encode("Valid1Password!")).thenReturn(
+      "encodedNewPassword"
+    );
 
-    userService.updateUser(authentication, updateDto);
+    userService.updateUser(authentication, userUpdate);
 
-    assertEquals("encodedPassword", testUser.getPassword());
-    verify(passwordEncoder, never()).encode(anyString());
-    verify(userRepository).save(testUser);
+    verify(passwordEncoder).encode("Valid1Password!");
+    verify(userRepository).save(currentUser);
+    assertEquals("encodedNewPassword", currentUser.getPassword());
   }
 
   @Test
-  void updateUser_ShouldNotUpdatePassword_WhenPasswordIsNull() {
+  void updateUser_withInvalidPassword_shouldThrowException() {
+    userUpdate.setPassword("invalidpassword");
     when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(
-      Optional.of(testUser)
+      Optional.of(currentUser)
     );
-    updateDto.setPassword(null);
 
-    userService.updateUser(authentication, updateDto);
+    IllegalArgumentException exception = assertThrows(
+      IllegalArgumentException.class,
+      () -> userService.updateUser(authentication, userUpdate)
+    );
 
-    assertEquals("encodedPassword", testUser.getPassword());
+    assertEquals(
+      "Le mot de passe doit contenir au moins une lettre minuscule, une lettre majuscule, un chiffre et un caractère spécial.",
+      exception.getMessage()
+    );
+    verify(userRepository, never()).save(any(User.class));
+  }
+
+  @Test
+  void updateUser_withNullPassword_shouldNotUpdatePassword() {
+    userUpdate.setPassword(null);
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(
+      Optional.of(currentUser)
+    );
+
+    userService.updateUser(authentication, userUpdate);
+
     verify(passwordEncoder, never()).encode(anyString());
-    verify(userRepository).save(testUser);
+    verify(userRepository).save(currentUser);
+    assertEquals("encodedPassword", currentUser.getPassword());
+  }
+
+  @Test
+  void updateUser_withEmptyPassword_shouldNotUpdatePassword() {
+    userUpdate.setPassword("");
+    when(userRepository.findByIdAndDeletedAtIsNull(userId)).thenReturn(
+      Optional.of(currentUser)
+    );
+
+    userService.updateUser(authentication, userUpdate);
+
+    verify(passwordEncoder, never()).encode(anyString());
+    verify(userRepository).save(currentUser);
+    assertEquals("encodedPassword", currentUser.getPassword());
   }
 }

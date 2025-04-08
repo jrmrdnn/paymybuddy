@@ -54,7 +54,8 @@ public class RegexpConstants {
    * The pattern breakdown is as follows:
    * <ul>
    *  <li><code>^</code> - Start of the string</li>
-   *  <li><code>(?=.*[\\p{L}\\p{N}])</code> - Positive lookahead to ensure the string contains at least one letter or number</li>
+   *  <li><code>(?=.*[\\p{L}])</code> - Positive lookahead to ensure the string contains at least one letter</li>
+   *  <li><code>(?=.*[\\p{N}])</code> - Positive lookahead to ensure the string contains at least one number</li>
    *  <li><code>(?=.*[\\p{Lu}])</code> - Positive lookahead to ensure the string contains at least one uppercase letter</li>
    *  <li><code>(?=.*[\\p{Ll}])</code> - Positive lookahead to ensure the string contains at least one lowercase letter</li>
    *  <li><code>(?=.*[\\p{Punct}])</code> - Positive lookahead to ensure the string contains at least one special character</li>
@@ -64,5 +65,5 @@ public class RegexpConstants {
    * </p>
    */
   public static final String PASSWORD_REGEXP =
-    "^(?=.*[\\p{L}\\p{N}])(?=.*[\\p{Lu}])(?=.*[\\p{Ll}])(?=.*[\\p{Punct}])[\\p{L}\\p{N}\\p{Punct}]+$";
+    "^(?=.*[\\p{L}])(?=.*[\\p{N}])(?=.*[\\p{Lu}])(?=.*[\\p{Ll}])(?=.*[\\p{Punct}])[\\p{L}\\p{N}\\p{Punct}]+$";
 }

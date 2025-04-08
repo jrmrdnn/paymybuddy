@@ -45,11 +45,9 @@ public class RegisterService {
    */
   private void validateEmailUniqueness(String email) {
     userRepository
-      .findByEmailAndDeletedAtIsNull(email)
+      .findByEmail(email)
       .ifPresent(u -> {
-        throw new EmailAlreadyUsedException(
-          "Email : " + email + " est déjà utilisé !!"
-        );
+        throw new EmailAlreadyUsedException("Email est déjà utilisé !!");
       });
   }
 }

@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Service
 @AllArgsConstructor
@@ -42,8 +43,9 @@ public class RelationService {
    */
   @Transactional
   public void saveRelation(
+    RelationDto relationDto,
     Authentication authentication,
-    RelationDto relationDto
+    RedirectAttributes redirectAttributes
   ) {
     // 1. Get the email of the relation user
     //    And the current user id
@@ -65,6 +67,12 @@ public class RelationService {
 
     // 5. Save the relation
     relationRepository.saveRelation(currentUserId, relationUser.getId());
+
+    // 6. Add a success message to the redirect attributes
+    redirectAttributes.addFlashAttribute(
+      "successMessage",
+      "Relation ajoutée avec succès !!"
+    );
   }
 
   /**
@@ -91,7 +99,7 @@ public class RelationService {
   private User findUserByEmail(String relationUserEmail) {
     return userRepository
       .findByEmailAndDeletedAtIsNull(relationUserEmail)
-      .orElseThrow(() -> new UserNotFoundException());
+      .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
   }
 
   /**

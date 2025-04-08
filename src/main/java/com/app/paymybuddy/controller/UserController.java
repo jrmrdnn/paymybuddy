@@ -1,7 +1,7 @@
 package com.app.paymybuddy.controller;
 
 import com.app.paymybuddy.dto.request.UserUpdateDto;
-import com.app.paymybuddy.exception.UserNotFoundException;
+import com.app.paymybuddy.exception.HandleException;
 import com.app.paymybuddy.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -19,6 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class UserController {
 
   private final UserService userService;
+  private final HandleException handleException;
 
   @GetMapping("/profil")
   public String showProfil(
@@ -46,19 +47,8 @@ public class UserController {
         "successMessage",
         "Profil mis à jour avec succès !!"
       );
-    } catch (UserNotFoundException e) {
-      result.rejectValue("email", "error.userUpdateDto", e.getMessage());
-      return "profil";
-    } catch (IllegalArgumentException e) {
-      result.rejectValue("password", "error.userUpdateDto", e.getMessage());
-      return "profil";
     } catch (Exception e) {
-      result.rejectValue(
-        "username",
-        "error.userUpdateDto",
-        "Une erreur c'est produite"
-      );
-      return "profil";
+      return handleException.exceptionUser(e, result);
     }
     return "redirect:/transfer";
   }

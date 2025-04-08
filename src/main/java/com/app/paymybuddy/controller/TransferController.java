@@ -1,34 +1,31 @@
 package com.app.paymybuddy.controller;
 
 import com.app.paymybuddy.dto.request.TransferDto;
-import com.app.paymybuddy.dto.response.UserRelationDto;
-import com.app.paymybuddy.exception.InsufficientBalanceException;
-import com.app.paymybuddy.exception.UserNotFoundException;
-import com.app.paymybuddy.model.Transaction;
-import com.app.paymybuddy.service.RelationService;
+import com.app.paymybuddy.exception.HandleException;
 import com.app.paymybuddy.service.TransactionService;
+import com.app.paymybuddy.util.ModelAttributes;
 import jakarta.validation.Valid;
-import java.util.List;
-import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @AllArgsConstructor
 public class TransferController {
 
-  private final RelationService relationService;
   private final TransactionService transactionService;
+  private final HandleException handleException;
+  private final ModelAttributes modelAttributes;
 
   @GetMapping("/transfer")
   public String showTransferPage(
@@ -38,9 +35,12 @@ public class TransferController {
     @RequestParam(defaultValue = "5") int size,
     Model model
   ) {
-    Pageable pageable = PageRequest.of(page, size);
     model.addAttribute("transferDto", new TransferDto());
-    addModelAttributes(authentication, model, pageable);
+    modelAttributes.addAttributeTransfer(
+      authentication,
+      model,
+      PageRequest.of(page, size)
+    );
     return "transfer";
   }
 
@@ -53,7 +53,7 @@ public class TransferController {
     Model model
   ) {
     if (bindingResult.hasErrors()) {
-      addModelAttributes(authentication, model);
+      modelAttributes.addAttributeTransfer(authentication, model);
       return "transfer";
     }
 
@@ -63,52 +63,29 @@ public class TransferController {
         "successMessage",
         "Transfert effectué avec succès !!"
       );
-    } catch (UserNotFoundException e) {
-      bindingResult.rejectValue("email", "error.transferDto", e.getMessage());
-      addModelAttributes(authentication, model);
-      return "transfer";
-    } catch (InsufficientBalanceException e) {
-      bindingResult.rejectValue("amount", "error.transferDto", e.getMessage());
-      addModelAttributes(authentication, model);
-      return "transfer";
-    } catch (Exception e) {
-      bindingResult.rejectValue(
-        "amount",
-        "error.transferDto",
-        "Une erreur c'est produite"
-      );
-      addModelAttributes(authentication, model);
-      return "transfer";
+    } catch (Exception exception) {
+      modelAttributes.addAttributeTransfer(authentication, model);
+      return handleException.exceptionTransfer(exception, bindingResult);
     }
 
     return "redirect:/transfer";
   }
 
-  private void addModelAttributes(Authentication authentication, Model model) {
-    Set<UserRelationDto> relations = relationService.findUserRelations(
-      authentication
-    );
-    List<Transaction> transactions = transactionService.getTransactionHistory(
-      authentication,
-      PageRequest.of(0, 5)
-    );
-    model.addAttribute("relations", relations);
-    model.addAttribute("transactions", transactions);
-  }
-
-  private void addModelAttributes(
-    Authentication authentication,
-    Model model,
-    Pageable pageable
+  /**
+   * Handle MethodArgumentTypeMismatchException
+   * @param ex
+   * @param redirectAttributes
+   */
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public String handleTypeMismatch(
+    MethodArgumentTypeMismatchException ex,
+    RedirectAttributes redirectAttributes
   ) {
-    Set<UserRelationDto> relations = relationService.findUserRelations(
-      authentication
+    redirectAttributes.addFlashAttribute(
+      "errorMessage",
+      "Paramètre de pagination invalide."
     );
-    List<Transaction> transactions = transactionService.getTransactionHistory(
-      authentication,
-      pageable
-    );
-    model.addAttribute("relations", relations);
-    model.addAttribute("transactions", transactions);
+
+    return "redirect:/transfer";
   }
 }

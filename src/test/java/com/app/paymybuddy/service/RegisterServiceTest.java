@@ -46,9 +46,9 @@ class RegisterServiceTest {
 
   @Test
   void saveUser_shouldCreateBankAccount_afterSavingUser() {
-    when(
-      userRepository.findByEmailAndDeletedAtIsNull(userDto.getEmail())
-    ).thenReturn(Optional.empty());
+    when(userRepository.findByEmail(userDto.getEmail())).thenReturn(
+      Optional.empty()
+    );
     when(passwordEncoder.encode(userDto.getPassword())).thenReturn(
       "encodedPassword"
     );
@@ -64,9 +64,9 @@ class RegisterServiceTest {
 
   @Test
   void saveUser_shouldNotCreateBankAccount_whenEmailIsAlreadyUsed() {
-    when(
-      userRepository.findByEmailAndDeletedAtIsNull(userDto.getEmail())
-    ).thenReturn(Optional.of(new User()));
+    when(userRepository.findByEmail(userDto.getEmail())).thenReturn(
+      Optional.of(new User())
+    );
 
     assertThrows(EmailAlreadyUsedException.class, () ->
       registerService.saveUser(userDto)
@@ -77,9 +77,9 @@ class RegisterServiceTest {
 
   @Test
   void saveUser_shouldExecuteInCorrectOrder() {
-    when(
-      userRepository.findByEmailAndDeletedAtIsNull(userDto.getEmail())
-    ).thenReturn(Optional.empty());
+    when(userRepository.findByEmail(userDto.getEmail())).thenReturn(
+      Optional.empty()
+    );
     when(passwordEncoder.encode(userDto.getPassword())).thenReturn(
       "encodedPassword"
     );

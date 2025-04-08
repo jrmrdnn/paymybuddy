@@ -1,12 +1,12 @@
 HELP.md
-target/
+# target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-.env
+# env
 .DS_Store
-/logs
-db.sql
+logs
+# db.sql
 
 ### STS ###
 .apt_generated

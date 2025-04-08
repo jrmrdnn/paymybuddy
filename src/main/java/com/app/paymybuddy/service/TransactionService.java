@@ -69,7 +69,7 @@ public class TransactionService {
     // 3. Find the receiver user by email
     User receiver = userRepository
       .findByEmailAndDeletedAtIsNull(transfer.getEmail())
-      .orElseThrow(() -> new UserNotFoundException());
+      .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
 
     // 4. Calculate the net transaction amount for the current user
     double transaction =
@@ -80,7 +80,7 @@ public class TransactionService {
     // 5. Find the bank account of the current user
     double bankAccount = bankAccountRepository
       .findByUserId(currentUserId)
-      .orElseThrow(() -> new UserNotFoundException())
+      .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"))
       .getBalance();
 
     // 6. Check if the user has enough balance

@@ -4,7 +4,7 @@
     th:replace="~{fragments/head :: head('Profil | PayMyBuddy', 'Modifier votre profil')}"
   ></head>
   <body class="body">
-    <header th:replace="fragments/header :: header('profil')"></header>
+    <header th:replace="~{fragments/header :: header('profil')}"></header>
     <main>
       <form
         id="profil-form"
@@ -21,7 +21,6 @@
             type="text"
             class="form-input"
             th:field="*{username}"
-            th:value="${userUpdateDto.username}"
             placeholder="@username"
           />
           <span
@@ -38,7 +37,6 @@
             type="email"
             class="form-input"
             th:field="*{email}"
-            th:value="${userUpdateDto.email}"
             placeholder="nom@domain.com"
           />
           <span

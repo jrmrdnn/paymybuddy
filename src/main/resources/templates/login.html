@@ -5,6 +5,9 @@
   ></head>
   <body>
     <header></header>
+    <div th:if="${successMessage}" class="success-message">
+      <p th:text="${successMessage}"></p>
+    </div>
     <main>
       <div class="form-card">
         <div id="login-title" class="form-title" role="heading" aria-level="1">

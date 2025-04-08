@@ -2,10 +2,12 @@ package com.app.paymybuddy.service;
 
 import com.app.paymybuddy.constants.RegexpConstants;
 import com.app.paymybuddy.dto.request.UserUpdateDto;
+import com.app.paymybuddy.exception.EmailAlreadyUsedException;
 import com.app.paymybuddy.exception.UserNotFoundException;
 import com.app.paymybuddy.model.User;
 import com.app.paymybuddy.repository.UserRepository;
 import com.app.paymybuddy.security.CustomUserDetails;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,7 +31,7 @@ public class UserService {
       .findByIdAndDeletedAtIsNull(
         ((CustomUserDetails) authentication.getPrincipal()).getUserId()
       )
-      .orElseThrow(() -> new UserNotFoundException());
+      .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
   }
 
   /**
@@ -46,9 +48,18 @@ public class UserService {
       .findByIdAndDeletedAtIsNull(
         ((CustomUserDetails) authentication.getPrincipal()).getUserId()
       )
-      .orElseThrow(() -> new UserNotFoundException());
+      .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
 
     user.setUsername(userUpdateDto.getUsername());
+
+    if (!Objects.equals(userUpdateDto.getEmail(), user.getEmail())) {
+      if (userRepository.findByEmail(userUpdateDto.getEmail()).isPresent()) {
+        throw new EmailAlreadyUsedException(
+          "L'email est déjà utilisé par un autre utilisateur."
+        );
+      }
+    }
+
     user.setEmail(userUpdateDto.getEmail());
 
     if (

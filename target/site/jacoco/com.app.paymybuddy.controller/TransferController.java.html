@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransferController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">paymybuddy</a> &gt; <a href="index.source.html" class="el_package">com.app.paymybuddy.controller</a> &gt; <span class="el_source">TransferController.java</span></div><h1>TransferController.java</h1><pre class="source lang-java linenums">package com.app.paymybuddy.controller;
+
+import com.app.paymybuddy.dto.request.TransferDto;
+import com.app.paymybuddy.exception.HandleException;
+import com.app.paymybuddy.service.TransactionService;
+import com.app.paymybuddy.util.ModelAttributes;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+@AllArgsConstructor
+public class TransferController {
+
+  private final TransactionService transactionService;
+  private final HandleException handleException;
+  private final ModelAttributes modelAttributes;
+
+  @GetMapping(&quot;/transfer&quot;)
+  public String showTransferPage(
+    RedirectAttributes redirectAttributes,
+    Authentication authentication,
+    @RequestParam(defaultValue = &quot;0&quot;) int page,
+    @RequestParam(defaultValue = &quot;5&quot;) int size,
+    Model model
+  ) {
+<span class="fc" id="L38">    model.addAttribute(&quot;transferDto&quot;, new TransferDto());</span>
+<span class="fc" id="L39">    modelAttributes.addAttributeTransfer(</span>
+      authentication,
+      model,
+<span class="fc" id="L42">      PageRequest.of(page, size)</span>
+    );
+<span class="fc" id="L44">    return &quot;transfer&quot;;</span>
+  }
+
+  @PostMapping(&quot;/transfer&quot;)
+  public String addTransfer(
+    @Valid @ModelAttribute(&quot;transferDto&quot;) TransferDto transfer,
+    BindingResult bindingResult,
+    RedirectAttributes redirectAttributes,
+    Authentication authentication,
+    Model model
+  ) {
+<span class="fc bfc" id="L55" title="All 2 branches covered.">    if (bindingResult.hasErrors()) {</span>
+<span class="fc" id="L56">      modelAttributes.addAttributeTransfer(authentication, model);</span>
+<span class="fc" id="L57">      return &quot;transfer&quot;;</span>
+    }
+
+    try {
+<span class="fc" id="L61">      transactionService.saveTransaction(authentication, transfer);</span>
+<span class="fc" id="L62">      redirectAttributes.addFlashAttribute(</span>
+        &quot;successMessage&quot;,
+        &quot;Transfert effectué avec succès !!&quot;
+      );
+<span class="fc" id="L66">    } catch (Exception exception) {</span>
+<span class="fc" id="L67">      modelAttributes.addAttributeTransfer(authentication, model);</span>
+<span class="fc" id="L68">      return handleException.exceptionTransfer(exception, bindingResult);</span>
+<span class="fc" id="L69">    }</span>
+
+<span class="fc" id="L71">    return &quot;redirect:/transfer&quot;;</span>
+  }
+
+  /**
+   * Handle MethodArgumentTypeMismatchException
+   * @param ex
+   * @param redirectAttributes
+   */
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public String handleTypeMismatch(
+    MethodArgumentTypeMismatchException ex,
+    RedirectAttributes redirectAttributes
+  ) {
+<span class="fc" id="L84">    redirectAttributes.addFlashAttribute(</span>
+      &quot;errorMessage&quot;,
+      &quot;Paramètre de pagination invalide.&quot;
+    );
+
+<span class="fc" id="L89">    return &quot;redirect:/transfer&quot;;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

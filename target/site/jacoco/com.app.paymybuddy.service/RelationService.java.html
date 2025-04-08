@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RelationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">paymybuddy</a> &gt; <a href="index.source.html" class="el_package">com.app.paymybuddy.service</a> &gt; <span class="el_source">RelationService.java</span></div><h1>RelationService.java</h1><pre class="source lang-java linenums">package com.app.paymybuddy.service;
+
+import com.app.paymybuddy.dto.request.RelationDto;
+import com.app.paymybuddy.dto.response.UserRelationDto;
+import com.app.paymybuddy.exception.RelationAlreadyExistsException;
+import com.app.paymybuddy.exception.UserNotFoundException;
+import com.app.paymybuddy.model.User;
+import com.app.paymybuddy.repository.RelationRepository;
+import com.app.paymybuddy.repository.UserRepository;
+import com.app.paymybuddy.security.CustomUserDetails;
+import java.util.Set;
+import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Service
+@AllArgsConstructor
+public class RelationService {
+
+  private final RelationRepository relationRepository;
+  private final UserRepository userRepository;
+
+  /**
+   * Find the relations of the current user.
+   * @param authentication
+   * @return Set&lt;UserRelationDto&gt;
+   */
+  public Set&lt;UserRelationDto&gt; findUserRelations(Authentication authentication) {
+    // 1. Get the current user id
+<span class="fc" id="L32">    Integer currentUserId =</span>
+<span class="fc" id="L33">      ((CustomUserDetails) authentication.getPrincipal()).getUserId();</span>
+
+    // 2. Find the relations of the current user
+<span class="fc" id="L36">    return relationRepository.findRelationsByUserId(currentUserId);</span>
+  }
+
+  /**
+   * Save a new relation.
+   * @param authentication
+   * @param relationDto
+   */
+  @Transactional
+  public void saveRelation(
+    RelationDto relationDto,
+    Authentication authentication,
+    RedirectAttributes redirectAttributes
+  ) {
+    // 1. Get the email of the relation user
+    //    And the current user id
+<span class="fc" id="L52">    String relationUserEmail = relationDto.getEmail();</span>
+<span class="fc" id="L53">    Integer currentUserId =</span>
+<span class="fc" id="L54">      ((CustomUserDetails) authentication.getPrincipal()).getUserId();</span>
+
+    // 2. Check if the current user and the relation user are the same
+<span class="fc" id="L57">    checkIfCurrentUserAndRelationUserAreTheSame(</span>
+<span class="fc" id="L58">      authentication.getName(),</span>
+      relationUserEmail
+    );
+
+    // 3. Find the relation user by email
+<span class="fc" id="L63">    User relationUser = findUserByEmail(relationUserEmail);</span>
+
+    // 4. Check if the relation already exists
+<span class="fc" id="L66">    checkRelationExists(currentUserId, relationUser);</span>
+
+    // 5. Save the relation
+<span class="fc" id="L69">    relationRepository.saveRelation(currentUserId, relationUser.getId());</span>
+
+    // 6. Add a success message to the redirect attributes
+<span class="fc" id="L72">    redirectAttributes.addFlashAttribute(</span>
+      &quot;successMessage&quot;,
+      &quot;Relation ajoutée avec succès !!&quot;
+    );
+<span class="fc" id="L76">  }</span>
+
+  /**
+   * Check if the current user and the relation user are the same.
+   * @param currentUserEmail
+   * @param relationUserEmail
+   */
+  private void checkIfCurrentUserAndRelationUserAreTheSame(
+    String currentUserEmail,
+    String relationUserEmail
+  ) {
+<span class="fc bfc" id="L87" title="All 2 branches covered.">    if (currentUserEmail.equals(relationUserEmail)) {</span>
+<span class="fc" id="L88">      throw new RelationAlreadyExistsException(</span>
+        &quot;Vous ne pouvez pas vous ajouter en tant que relation&quot;
+      );
+    }
+<span class="fc" id="L92">  }</span>
+
+  /**
+   * Find a relation user by email.
+   * @param relationUserEmail
+   * @return User
+   */
+  private User findUserByEmail(String relationUserEmail) {
+<span class="fc" id="L100">    return userRepository</span>
+<span class="fc" id="L101">      .findByEmailAndDeletedAtIsNull(relationUserEmail)</span>
+<span class="fc" id="L102">      .orElseThrow(() -&gt; new UserNotFoundException(&quot;Utilisateur non trouvé&quot;));</span>
+  }
+
+  /**
+   * Check if a relation already exists between the current user and the relation user.
+   * @param currentUserId
+   * @param relationUser
+   */
+  private void checkRelationExists(Integer currentUserId, User relationUser) {
+<span class="fc" id="L111">    if (</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">      relationRepository.existsRelationBetweenUserIdAndEmail(</span>
+        currentUserId,
+<span class="fc" id="L114">        relationUser.getId()</span>
+      )
+    ) {
+<span class="fc" id="L117">      throw new RelationAlreadyExistsException(</span>
+        &quot;Relation déjà existante avec cet utilisateur&quot;
+      );
+    }
+<span class="fc" id="L121">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

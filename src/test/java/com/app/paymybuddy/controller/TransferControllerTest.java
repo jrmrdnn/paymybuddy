@@ -5,16 +5,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.app.paymybuddy.dto.request.TransferDto;
-import com.app.paymybuddy.dto.response.UserRelationDto;
+import com.app.paymybuddy.exception.HandleException;
 import com.app.paymybuddy.exception.InsufficientBalanceException;
 import com.app.paymybuddy.exception.UserNotFoundException;
-import com.app.paymybuddy.model.Transaction;
 import com.app.paymybuddy.service.RelationService;
 import com.app.paymybuddy.service.TransactionService;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import com.app.paymybuddy.util.ModelAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,28 +39,25 @@ public class TransferControllerTest {
   private Model model;
 
   @Mock
+  private BindingResult bindingResult;
+
+  @Mock
   private RedirectAttributes redirectAttributes;
 
   @Mock
-  private BindingResult bindingResult;
+  private HandleException handleException;
+
+  @Mock
+  private ModelAttributes modelAttributes;
 
   @InjectMocks
   private TransferController transferController;
 
   @Test
   public void showTransferPage_ShouldAddAttributesAndReturnTransferView() {
-    Set<UserRelationDto> relations = new HashSet<>();
-    List<Transaction> transactions = new ArrayList<>();
-
-    when(
-      relationService.findUserRelations(any(Authentication.class))
-    ).thenReturn(relations);
-    when(
-      transactionService.getTransactionHistory(
-        any(Authentication.class),
-        any(Pageable.class)
-      )
-    ).thenReturn(transactions);
+    doNothing()
+      .when(modelAttributes)
+      .addAttributeTransfer(eq(authentication), eq(model), any(Pageable.class));
 
     String viewName = transferController.showTransferPage(
       redirectAttributes,
@@ -73,14 +67,12 @@ public class TransferControllerTest {
       model
     );
 
-    verify(model).addAttribute(eq("transferDto"), any(TransferDto.class));
-    verify(model).addAttribute("relations", relations);
-    verify(model).addAttribute("transactions", transactions);
-    verify(relationService).findUserRelations(authentication);
-    verify(transactionService).getTransactionHistory(
+    verify(modelAttributes).addAttributeTransfer(
       eq(authentication),
+      eq(model),
       any(Pageable.class)
     );
+    verify(model).addAttribute(eq("transferDto"), any(TransferDto.class));
 
     assert "transfer".equals(viewName);
   }
@@ -91,6 +83,10 @@ public class TransferControllerTest {
 
     when(bindingResult.hasErrors()).thenReturn(true);
 
+    doNothing()
+      .when(modelAttributes)
+      .addAttributeTransfer(eq(authentication), eq(model));
+
     String viewName = transferController.addTransfer(
       transferDto,
       bindingResult,
@@ -100,11 +96,7 @@ public class TransferControllerTest {
     );
 
     verify(bindingResult).hasErrors();
-    verify(relationService).findUserRelations(authentication);
-    verify(transactionService).getTransactionHistory(
-      eq(authentication),
-      any(Pageable.class)
-    );
+    verify(modelAttributes).addAttributeTransfer(authentication, model);
 
     assert "transfer".equals(viewName);
   }
@@ -134,11 +126,23 @@ public class TransferControllerTest {
   @Test
   public void addTransfer_WithUserNotFoundException_ShouldReturnTransferView() {
     TransferDto transferDto = new TransferDto();
+    Exception exception = new UserNotFoundException("User not found");
 
     when(bindingResult.hasErrors()).thenReturn(false);
-    doThrow(new UserNotFoundException())
+    doThrow(exception)
       .when(transactionService)
       .saveTransaction(any(Authentication.class), any(TransferDto.class));
+
+    when(
+      handleException.exceptionTransfer(
+        any(UserNotFoundException.class),
+        eq(bindingResult)
+      )
+    ).thenReturn("transfer");
+
+    doNothing()
+      .when(modelAttributes)
+      .addAttributeTransfer(eq(authentication), eq(model));
 
     String viewName = transferController.addTransfer(
       transferDto,
@@ -148,16 +152,11 @@ public class TransferControllerTest {
       model
     );
 
-    verify(bindingResult).rejectValue(
-      "email",
-      "error.transferDto",
-      "Utilisateur non trouvé"
+    verify(handleException).exceptionTransfer(
+      any(UserNotFoundException.class),
+      eq(bindingResult)
     );
-    verify(relationService).findUserRelations(authentication);
-    verify(transactionService).getTransactionHistory(
-      eq(authentication),
-      any(Pageable.class)
-    );
+    verify(modelAttributes).addAttributeTransfer(authentication, model);
 
     assert "transfer".equals(viewName);
   }
@@ -165,11 +164,25 @@ public class TransferControllerTest {
   @Test
   public void addTransfer_WithInsufficientBalanceException_ShouldReturnTransferView() {
     TransferDto transferDto = new TransferDto();
+    Exception exception = new InsufficientBalanceException(
+      "Insufficient balance"
+    );
 
     when(bindingResult.hasErrors()).thenReturn(false);
-    doThrow(new InsufficientBalanceException("Insufficient balance"))
+    doThrow(exception)
       .when(transactionService)
       .saveTransaction(any(Authentication.class), any(TransferDto.class));
+
+    when(
+      handleException.exceptionTransfer(
+        any(InsufficientBalanceException.class),
+        eq(bindingResult)
+      )
+    ).thenReturn("transfer");
+
+    doNothing()
+      .when(modelAttributes)
+      .addAttributeTransfer(eq(authentication), eq(model));
 
     String viewName = transferController.addTransfer(
       transferDto,
@@ -179,16 +192,11 @@ public class TransferControllerTest {
       model
     );
 
-    verify(bindingResult).rejectValue(
-      "amount",
-      "error.transferDto",
-      "Insufficient balance"
+    verify(handleException).exceptionTransfer(
+      any(InsufficientBalanceException.class),
+      eq(bindingResult)
     );
-    verify(relationService).findUserRelations(authentication);
-    verify(transactionService).getTransactionHistory(
-      eq(authentication),
-      any(Pageable.class)
-    );
+    verify(modelAttributes).addAttributeTransfer(authentication, model);
 
     assert "transfer".equals(viewName);
   }
@@ -196,11 +204,23 @@ public class TransferControllerTest {
   @Test
   public void addTransfer_WithGenericException_ShouldReturnTransferView() {
     TransferDto transferDto = new TransferDto();
+    Exception exception = new RuntimeException("Error");
 
     when(bindingResult.hasErrors()).thenReturn(false);
-    doThrow(new RuntimeException("Generic error"))
+    doThrow(exception)
       .when(transactionService)
       .saveTransaction(any(Authentication.class), any(TransferDto.class));
+
+    when(
+      handleException.exceptionTransfer(
+        any(RuntimeException.class),
+        eq(bindingResult)
+      )
+    ).thenReturn("transfer");
+
+    doNothing()
+      .when(modelAttributes)
+      .addAttributeTransfer(eq(authentication), eq(model));
 
     String viewName = transferController.addTransfer(
       transferDto,
@@ -210,17 +230,31 @@ public class TransferControllerTest {
       model
     );
 
-    verify(bindingResult).rejectValue(
-      "amount",
-      "error.transferDto",
-      "Une erreur c'est produite"
+    verify(handleException).exceptionTransfer(
+      any(RuntimeException.class),
+      eq(bindingResult)
     );
-    verify(relationService).findUserRelations(authentication);
-    verify(transactionService).getTransactionHistory(
-      eq(authentication),
-      any(Pageable.class)
-    );
+    verify(modelAttributes).addAttributeTransfer(authentication, model);
 
     assert "transfer".equals(viewName);
+  }
+
+  @Test
+  public void handleTypeMismatch_ShouldAddErrorMessageAndRedirectToTransfer() {
+    MethodArgumentTypeMismatchException ex = mock(
+      MethodArgumentTypeMismatchException.class
+    );
+
+    String viewName = transferController.handleTypeMismatch(
+      ex,
+      redirectAttributes
+    );
+
+    verify(redirectAttributes).addFlashAttribute(
+      "errorMessage",
+      "Paramètre de pagination invalide."
+    );
+
+    assert "redirect:/transfer".equals(viewName);
   }
 }

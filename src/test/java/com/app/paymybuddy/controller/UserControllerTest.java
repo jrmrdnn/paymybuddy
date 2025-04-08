@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.app.paymybuddy.dto.request.UserUpdateDto;
+import com.app.paymybuddy.exception.HandleException;
 import com.app.paymybuddy.exception.UserNotFoundException;
 import com.app.paymybuddy.model.User;
 import com.app.paymybuddy.service.UserService;
@@ -33,6 +34,9 @@ public class UserControllerTest {
 
   @Mock
   private BindingResult bindingResult;
+
+  @Mock
+  private HandleException handleException;
 
   @Mock
   private RedirectAttributes redirectAttributes;
@@ -97,11 +101,19 @@ public class UserControllerTest {
   @Test
   public void updateProfil_ShouldHandleUserNotFoundException() {
     UserUpdateDto userUpdateDto = new UserUpdateDto();
+    Exception exception = new UserNotFoundException("User not found");
 
     when(bindingResult.hasErrors()).thenReturn(false);
-    doThrow(new UserNotFoundException())
+    doThrow(exception)
       .when(userService)
       .updateUser(authentication, userUpdateDto);
+
+    when(
+      handleException.exceptionUser(
+        any(UserNotFoundException.class),
+        eq(bindingResult)
+      )
+    ).thenReturn("profil");
 
     String viewName = userController.updateProfil(
       userUpdateDto,
@@ -112,25 +124,28 @@ public class UserControllerTest {
     );
 
     assertEquals("profil", viewName);
-    verify(bindingResult).rejectValue(
-      "email",
-      "error.userUpdateDto",
-      "Utilisateur non trouvé"
+    verify(handleException).exceptionUser(
+      any(UserNotFoundException.class),
+      eq(bindingResult)
     );
   }
 
   @Test
   public void updateProfil_ShouldHandleIllegalArgumentException() {
     UserUpdateDto userUpdateDto = new UserUpdateDto();
+    Exception exception = new IllegalArgumentException("Invalid argument");
 
     when(bindingResult.hasErrors()).thenReturn(false);
-    doThrow(
-      new IllegalArgumentException(
-        "Le mot de passe doit contenir au moins une lettre minuscule, une lettre majuscule, un chiffre et un caractère spécial."
-      )
-    )
+    doThrow(exception)
       .when(userService)
       .updateUser(authentication, userUpdateDto);
+
+    when(
+      handleException.exceptionUser(
+        any(IllegalArgumentException.class),
+        eq(bindingResult)
+      )
+    ).thenReturn("profil");
 
     String viewName = userController.updateProfil(
       userUpdateDto,
@@ -141,21 +156,28 @@ public class UserControllerTest {
     );
 
     assertEquals("profil", viewName);
-    verify(bindingResult).rejectValue(
-      "password",
-      "error.userUpdateDto",
-      "Le mot de passe doit contenir au moins une lettre minuscule, une lettre majuscule, un chiffre et un caractère spécial."
+    verify(handleException).exceptionUser(
+      any(IllegalArgumentException.class),
+      eq(bindingResult)
     );
   }
 
   @Test
   public void updateProfil_ShouldHandleGenericException() {
     UserUpdateDto userUpdateDto = new UserUpdateDto();
+    Exception exception = new RuntimeException("Unexpected error");
 
     when(bindingResult.hasErrors()).thenReturn(false);
-    doThrow(new RuntimeException("Unexpected error"))
+    doThrow(exception)
       .when(userService)
       .updateUser(authentication, userUpdateDto);
+
+    when(
+      handleException.exceptionUser(
+        any(RuntimeException.class),
+        eq(bindingResult)
+      )
+    ).thenReturn("profil");
 
     String viewName = userController.updateProfil(
       userUpdateDto,
@@ -166,10 +188,9 @@ public class UserControllerTest {
     );
 
     assertEquals("profil", viewName);
-    verify(bindingResult).rejectValue(
-      "username",
-      "error.userUpdateDto",
-      "Une erreur c'est produite"
+    verify(handleException).exceptionUser(
+      any(RuntimeException.class),
+      eq(bindingResult)
     );
   }
 }

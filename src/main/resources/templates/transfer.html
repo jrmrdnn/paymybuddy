@@ -29,11 +29,10 @@
                 id="transfer-email"
                 name="email"
                 class="select-transfer"
+                th:field="*{email}"
                 required
               >
-                <option value="" disabled selected>
-                  Sélectionner une relation
-                </option>
+                <option value="">Sélectionner une relation</option>
                 <option
                   th:each="relation : ${relations}"
                   th:value="${relation.email}"
@@ -55,6 +54,7 @@
                 name="description"
                 type="text"
                 class="form-input"
+                th:field="*{description}"
                 placeholder="Description"
                 aria-required="true"
                 required
@@ -74,6 +74,7 @@
                 name="amount"
                 type="text"
                 class="form-input"
+                th:field="*{amount}"
                 placeholder="0€"
                 aria-required="true"
                 required

@@ -1,8 +1,7 @@
 package com.app.paymybuddy.controller;
 
 import com.app.paymybuddy.dto.request.RelationDto;
-import com.app.paymybuddy.exception.RelationAlreadyExistsException;
-import com.app.paymybuddy.exception.UserNotFoundException;
+import com.app.paymybuddy.exception.HandleException;
 import com.app.paymybuddy.service.RelationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -20,6 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class RelationController {
 
   private final RelationService relationService;
+  private final HandleException handleException;
 
   @GetMapping("/relation")
   public String showRelation(
@@ -40,23 +40,13 @@ public class RelationController {
     if (bindingResult.hasErrors()) return "relation";
 
     try {
-      relationService.saveRelation(authentication, relationDto);
-      redirectAttributes.addFlashAttribute(
-        "successMessage",
-        "Relation ajoutée avec succès !!"
+      relationService.saveRelation(
+        relationDto,
+        authentication,
+        redirectAttributes
       );
-    } catch (RelationAlreadyExistsException e) {
-      bindingResult.rejectValue("email", "error.relation", e.getMessage());
-      return "relation";
-    } catch (UserNotFoundException e) {
-      bindingResult.rejectValue("email", "error.relation", e.getMessage());
-      return "relation";
     } catch (Exception e) {
-      redirectAttributes.addFlashAttribute(
-        "errorMessage",
-        "Une erreur c'est produite !!"
-      );
-      return "redirect:/relation";
+      return handleException.exceptionRelation(e, bindingResult);
     }
 
     return "redirect:/transfer";

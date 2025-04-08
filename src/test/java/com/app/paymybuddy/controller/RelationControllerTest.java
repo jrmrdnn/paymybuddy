@@ -1,9 +1,12 @@
 package com.app.paymybuddy.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.app.paymybuddy.dto.request.RelationDto;
+import com.app.paymybuddy.exception.HandleException;
 import com.app.paymybuddy.exception.RelationAlreadyExistsException;
 import com.app.paymybuddy.exception.UserNotFoundException;
 import com.app.paymybuddy.service.RelationService;
@@ -35,6 +38,9 @@ class RelationControllerTest {
 
   @Mock
   private BindingResult bindingResult;
+
+  @Mock
+  private HandleException handleException;
 
   @InjectMocks
   private RelationController relationController;
@@ -71,11 +77,12 @@ class RelationControllerTest {
       authentication
     );
 
-    verify(relationService, times(1)).saveRelation(authentication, relationDto);
-    verify(redirectAttributes, times(1)).addFlashAttribute(
-      "successMessage",
-      "Relation ajoutée avec succès !!"
+    verify(relationService, times(1)).saveRelation(
+      relationDto,
+      authentication,
+      redirectAttributes
     );
+
     assertEquals("redirect:/transfer", viewName);
   }
 
@@ -97,9 +104,18 @@ class RelationControllerTest {
   @Test
   void testAddRelation_RelationAlreadyExistsException() throws Exception {
     when(bindingResult.hasErrors()).thenReturn(false);
-    doThrow(new RelationAlreadyExistsException("Relation already exists"))
+    RelationAlreadyExistsException exception =
+      new RelationAlreadyExistsException("Relation already exists");
+    doThrow(exception)
       .when(relationService)
-      .saveRelation(authentication, relationDto);
+      .saveRelation(relationDto, authentication, redirectAttributes);
+
+    when(
+      handleException.exceptionRelation(
+        any(RelationAlreadyExistsException.class),
+        eq(bindingResult)
+      )
+    ).thenReturn("relation");
 
     String viewName = relationController.addRelation(
       relationDto,
@@ -108,20 +124,26 @@ class RelationControllerTest {
       authentication
     );
 
-    verify(bindingResult, times(1)).rejectValue(
-      "email",
-      "error.relation",
-      "Relation already exists"
-    );
+    verify(handleException).exceptionRelation(eq(exception), eq(bindingResult));
     assertEquals("relation", viewName);
   }
 
   @Test
   void testAddRelation_UserNotFoundException() throws Exception {
     when(bindingResult.hasErrors()).thenReturn(false);
-    doThrow(new UserNotFoundException())
+    UserNotFoundException exception = new UserNotFoundException(
+      "User not found"
+    );
+    doThrow(exception)
       .when(relationService)
-      .saveRelation(authentication, relationDto);
+      .saveRelation(relationDto, authentication, redirectAttributes);
+
+    when(
+      handleException.exceptionRelation(
+        any(UserNotFoundException.class),
+        eq(bindingResult)
+      )
+    ).thenReturn("relation");
 
     String viewName = relationController.addRelation(
       relationDto,
@@ -130,20 +152,24 @@ class RelationControllerTest {
       authentication
     );
 
-    verify(bindingResult, times(1)).rejectValue(
-      "email",
-      "error.relation",
-      "Utilisateur non trouvé"
-    );
+    verify(handleException).exceptionRelation(eq(exception), eq(bindingResult));
     assertEquals("relation", viewName);
   }
 
   @Test
   void testAddRelation_GenericException() throws Exception {
     when(bindingResult.hasErrors()).thenReturn(false);
-    doThrow(new RuntimeException("Unexpected error"))
+    RuntimeException exception = new RuntimeException("Unexpected error");
+    doThrow(exception)
       .when(relationService)
-      .saveRelation(authentication, relationDto);
+      .saveRelation(relationDto, authentication, redirectAttributes);
+
+    when(
+      handleException.exceptionRelation(
+        any(RuntimeException.class),
+        eq(bindingResult)
+      )
+    ).thenReturn("redirect:/relation");
 
     String viewName = relationController.addRelation(
       relationDto,
@@ -152,10 +178,7 @@ class RelationControllerTest {
       authentication
     );
 
-    verify(redirectAttributes, times(1)).addFlashAttribute(
-      "errorMessage",
-      "Une erreur c'est produite !!"
-    );
+    verify(handleException).exceptionRelation(eq(exception), eq(bindingResult));
     assertEquals("redirect:/relation", viewName);
   }
 }

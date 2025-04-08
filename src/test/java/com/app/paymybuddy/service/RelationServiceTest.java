@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @ExtendWith(MockitoExtension.class)
 class RelationServiceTest {
@@ -30,6 +31,9 @@ class RelationServiceTest {
 
   @Mock
   private Authentication authentication;
+
+  @Mock
+  private RedirectAttributes redirectAttributes;
 
   @InjectMocks
   private RelationService relationService;
@@ -63,7 +67,11 @@ class RelationServiceTest {
     when(authentication.getName()).thenReturn(RELATION_EMAIL);
 
     assertThrows(RelationAlreadyExistsException.class, () ->
-      relationService.saveRelation(authentication, relationDto)
+      relationService.saveRelation(
+        relationDto,
+        authentication,
+        redirectAttributes
+      )
     );
   }
 
@@ -78,7 +86,11 @@ class RelationServiceTest {
     ).thenReturn(Optional.empty());
 
     assertThrows(UserNotFoundException.class, () ->
-      relationService.saveRelation(authentication, relationDto)
+      relationService.saveRelation(
+        relationDto,
+        authentication,
+        redirectAttributes
+      )
     );
   }
 
@@ -101,7 +113,11 @@ class RelationServiceTest {
     ).thenReturn(true);
 
     assertThrows(RelationAlreadyExistsException.class, () ->
-      relationService.saveRelation(authentication, relationDto)
+      relationService.saveRelation(
+        relationDto,
+        authentication,
+        redirectAttributes
+      )
     );
   }
 
@@ -122,7 +138,11 @@ class RelationServiceTest {
       relationRepository.existsRelationBetweenUserIdAndEmail(1, 2)
     ).thenReturn(false);
 
-    relationService.saveRelation(authentication, relationDto);
+    relationService.saveRelation(
+      relationDto,
+      authentication,
+      redirectAttributes
+    );
 
     verify(relationRepository, times(1)).saveRelation(1, 2);
   }
